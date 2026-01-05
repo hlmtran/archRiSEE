@@ -16,19 +16,8 @@ iSEEarchR <- function(x, colorColumn = "Clusters") {
   # reason for this will become obvious 
   stopifnot(c("UMAP","LSI") %in% reducedDimNames(x))
 
-  # if LSI and/or NMF columns aren't in colData already, add them 
-  if (!all(names(reducedDim(x, "LSI")) %in% names(colData(x)))) {
-    for (i in names(reducedDim(SCE, "LSI"))) {
-      message("Adding ", i, " as colData(SCE)$", i)
-      colData(x)[, i] <- i
-    }
-  }
-  if ("NMF" %in% reducedDimNames(x)) {
-    for (i in names(reducedDim(SCE, "NMF"))) {
-      message("Adding ", i, " as colData(SCE)$", i)
-      colData(x)[, i] <- i
-    }
-  }
+  # if reducedDim(x) columns aren't already in colData(x), add them
+  for (rdim in reducedDimNames(x)) x <- .reducedDimsAsColData(x, rdim=rdim)
 
   # launch
   iSEE(x,
@@ -61,4 +50,21 @@ iSEEarchR <- function(x, colorColumn = "Clusters") {
                        )
             )
      )
+}
+
+
+# helper fn
+.reducedDimsAsColData <- function(x, rdim="NMF") {
+
+  stopifnot(rdim %in% reducedDimNames(x))
+  cdnames <- names(colData(x))
+  rdimnames <- colnames(reducedDim(x, rdim))
+  if (!all(toupper(rdimnames) %in% cdnames)) {
+    for (i in rdimnames) { 
+      message("Adding ", i, " as colData(SCE)$", toupper(i))
+      colData(x)[, toupper(i)] <- reducedDim(x, rdim)[, i]
+    }
+  }
+  return(x) 
+
 }

@@ -24,7 +24,7 @@
 #'
 #' # without replacement:
 #' set.seed(1234)
-#' (downsample(se, "Clusters"))
+#' (downsample(se, "Clusters", maxN=5))
 #'
 #' # with replacement:
 #' set.seed(1234)
