@@ -4,12 +4,14 @@
 \alias{iSEEarchR}
 \title{convenience wrapper for iSEE on an ArchR-derived singlecellexperiment}
 \usage{
-iSEEarchR(x, colorColumn = "Clusters")
+iSEEarchR(x, colorColumn = "Clusters", dryRun = FALSE)
 }
 \arguments{
 \item{x}{a SingleCellExperiment with UMAP and LSI reducedDims}
 
-\item{colorColumn}{the colData column to color plots ("mitoCluster")}
+\item{colorColumn}{the colData column to color plots ("Clusters")}
+
+\item{dryRun}{just preprocess the data and exit without iSEE? (FALSE)}
 }
 \description{
 Note that this is a quick and dirty affair so don't expect much.
