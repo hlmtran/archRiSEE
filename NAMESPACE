@@ -3,7 +3,7 @@
 export(addIgvTrack)
 export(addNMF)
 export(archRtoSCE)
-export(blockDownsample)
+export(downsample)
 export(iSEEarchR)
 import(ArchR)
 import(GenomicRanges)

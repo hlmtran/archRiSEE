@@ -15,18 +15,20 @@
 #' u <- matrix(rpois(20000, 5), ncol=ncells)
 #' v <- log2(u + 1)
 #' library(SummarizedExperiment)
-#' (se <- SummarizedExperiment(assays=list(counts=u, logcounts=v)))
-#'
+#' se <- SummarizedExperiment(assays=list(counts=u, logcounts=v))
+#' rownames(se) <- paste0("feature", seq_len(nrow(se)))
+#' colnames(se) <- paste0("subject", seq_len(ncol(se)))
 #' clusts <- factor(1:5) 
 #' se$Clusters <- sample(clusts, ncol(se), replace=TRUE)
+#' show(se) 
 #'
 #' # without replacement:
 #' set.seed(1234)
-#' (blockDownsample(se, "Clusters"))
+#' (downsample(se, "Clusters"))
 #'
 #' # with replacement:
 #' set.seed(1234)
-#' (blockDownsample(se, "Clusters", replace=TRUE))
+#' (downsample(se, "Clusters", replace=TRUE))
 #' 
 #' @return        a subset of x, downsampled to match the smallest N(g)
 #' 
@@ -34,7 +36,7 @@
 #'
 #' @export
 #'
-blockDownsample <- function(x, g, maxN=Inf, INDEX=2, quietly=FALSE, ...) {
+downsample <- function(x, g, maxN=Inf, INDEX=2, quietly=FALSE, ...) {
 
   if (length(g) != dim(x)[INDEX]) {
     if (is(x, "SummarizedExperiment") & INDEX == 2) {
@@ -55,7 +57,7 @@ blockDownsample <- function(x, g, maxN=Inf, INDEX=2, quietly=FALSE, ...) {
     if (length(mdn) > 0 & !quietly) { 
       mdns <- paste(mdn, collapse=", ")
       warning("Metadata (", mdns, ") discarded. May be recoverable, e.g.")
-      warning('xx <- blockDownsample(x, "', g, '", INDEX=2)')
+      warning('xx <- downsample(x, "', g, '", INDEX=2)')
       warning('metadata(xx) <- lapply(metadata(x), "[", j=colnames(xx))')
       warning("This is not done automatically, as metadata is unrestricted.")
     }
