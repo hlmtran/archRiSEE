@@ -13,7 +13,6 @@
 #'
 #' @details presumes LSI and UMAP. you will almost certainly want to tweak this.
 #'
-#' @import ArchR
 #' @import RcppML
 #' @import scuttle
 #' @import GenomicRanges
@@ -23,6 +22,7 @@
 #'
 archRtoSCE <- function(proj, tile=500, addNMF=FALSE, k=30, colDat=FALSE, ...) { 
 
+  if (!require(ArchR)) stop("This function won't work without an ArchR install")
   message("Adding TileMatrix to ArchR project (this may take a while)...")
   proj <- addTileMatrix(proj, force=TRUE, binarize=FALSE, tileSize=tile, ...)
   message("Converting to SingleCellExperiment...")
