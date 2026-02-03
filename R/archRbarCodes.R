@@ -17,6 +17,10 @@
 #'
 archRbarCodes <- function(proj, splt="#", pos=2)  { 
 
-  sapply(strsplit(rownames(proj@cellColData), splt), "[", pos)
+  if (any(!grepl(splt, rownames(proj@cellColData)))) {
+    return(rownames(proj@cellColData)) 
+  } else { 
+    sapply(strsplit(rownames(proj@cellColData), splt), "[", pos)
+  }
 
 }
