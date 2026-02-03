@@ -38,6 +38,31 @@ tabulate (usually) offtarget vs. ontarget variants
              for tabulating by (eg) cellLine and edit status
 }\if{html}{\out{</div>}}
 }
+\examples{
+
+\dontrun{
+
+  # this takes time, even though it IS subsetted
+  system.time(ewsSub <- readRDS("ewsSub.rds"))
+  #    user  system elapsed 
+  # 200.518   5.787 206.487 
+  
+  grouping <- c("cellLine", "edited")
+  loci <- c("11922G>A", "11925C>T", "11946C>T")
+  res <- variantFreq(ewsSub, grouping=grouping, loci=loci)
+  names(res) 
+  # [1] "11922G>A" "11925C>T" "11946C>T" "cellLine" "edited"  
+  
+  (names(res)[1:3] <- paste0("chrM_", sub('>', '_', names(res)[1:3])))
+  # [1] "chrM_11922G_A" "chrM_11925C_T" "chrM_11946C_T"
+  
+  with(res, table(chrM_11922G_A, edited, cellLine))  # on-target
+  with(res, table(chrM_11925C_T, edited, cellLine))  # off-target 
+
+}
+
+
+}
 \seealso{
 archRtoSCE
 }

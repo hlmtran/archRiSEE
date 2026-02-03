@@ -33,7 +33,7 @@
 #'   with(res, table(chrM_11922G_A, edited, cellLine))  # on-target
 #'   with(res, table(chrM_11925C_T, edited, cellLine))  # off-target 
 #' 
-#' \}
+#' }
 #'
 #'
 #' @seealso archRtoSCE 

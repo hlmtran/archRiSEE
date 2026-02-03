@@ -1,17 +1,24 @@
 #' turn an ArchR project into a SingleCellExperiment 
 #'
-#' The default tile size is 500bp, just like ArchR's default. 
-#'
 #' @param proj          an ArchRproject 
-#' @param tile          tile size (500)
+#' @param how           where to get counts from ('tiles','feats','LSI')
+#' @param feats         GRanges of features to extract (ideally 500bp; NULL)
 #' @param addNMF        add an NMF decomposition of logCounts? (FALSE)
-#' @param k             rank for the NMF decomposition on logCounts (30) 
 #' @param colDat        add LSI and/or NMF scores to colData(SCE)? (FALSE)
-#' @param ...           additional arguments to pass to ArchR::addTileMatrix
+#' @param LSIdim        name of IterativeLSI reducedDim ("IterativeLSI") 
+#' @param tileSize      tileSize (default is 500, but see details for more)
+#' @param ...           additional arguments
 #'
 #' @return              a SingleCellExperiment 
 #'
-#' @details presumes LSI and UMAP. you will almost certainly want to tweak this.
+#' @details Presumes LSI and UMAP. you will almost certainly want to tweak this.
+#'          If !is.null(feats), (GRanges, please!) we assume that how == "feats"
+#'          If you are working with single-cell histone or transcription factor
+#'          data, you will most likely want to use larger (5kb-50kb) tiles (see 
+#'          Janssens et al, Nature Protocols, 2024 for sciCUT&Tag benchmarks).
+#'          This function has changed recently (2026) and the assumption is
+#'          that most users will want a subset of features. Pay attention to 
+#'          any warning messages -- they can save you a lot of time and RAM!
 #'
 #' @import RcppML
 #' @import scuttle
@@ -20,28 +27,91 @@
 #'
 #' @export
 #'
-archRtoSCE <- function(proj, tile=500, addNMF=FALSE, k=30, colDat=FALSE, ...) { 
+archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FALSE, colDat=FALSE, LSIdim="IterativeLSI", tileSize=500, ...) { 
 
   if (!require(ArchR)) stop("This function won't work without an ArchR install")
-  message("Adding TileMatrix to ArchR project (this may take a while)...")
-  proj <- addTileMatrix(proj, force=TRUE, binarize=FALSE, tileSize=tile, ...)
-  message("Converting to SingleCellExperiment...")
-  SCE <- as(getMatrixFromProject(proj, "TileMatrix"), "SingleCellExperiment") 
-  rowData(SCE)$assay<- "FragmentCounts" # for binding to any other altExps
+  how <- match.arg(how) 
+  if (!is.null(feats)) how <- "feats"
+  LSI <- archRiterLSI(proj)
+  tile <- archRtileSize(proj)
+
+  # key: which ones?
+  if (how == "feats") { 
+
+    # {{{ grab user-provided features 
+    message("Adding 'feats' matrix to project (usually fast)...")
+    proj <- addFeatureMatrix(proj, features=feats, matrixName="feats",
+                             binarize=FALSE, force=TRUE)
+    message("Converting to a SingleCellExperiment...") 
+    SCE <- as(getMatrixFromProject(proj, "feats"), "SingleCellExperiment") 
+    rownames(SCE) <- as.character(rowRanges(SCE))
+    assayNames(SCE) <- "counts"
+    # }}}
+
+  } else if (how == "LSI") {
+    
+    if (tile == 500) {
+      warning("IterativeLSI run with tile size of ", tile, ", be sure it's OK!")
+    }
+
+    # {{{ grab LSI-defined features
+    message("Adding 'LSI' matrix to project (usually fast)...")
+    proj <- addFeatureMatrix(proj, features=LSI$LSIFeatures, 
+                             matrixName="LSI", binarize=FALSE,
+                             force=TRUE)
+    SCE <- as(getMatrixFromProject(proj, "LSI"), "SingleCellExperiment") 
+    rownames(SCE) <- as.character(rowRanges(SCE))
+    assayNames(SCE) <- "counts"
+    # }}}
+
+  } else { 
+
+    if (tileSize == 500) {
+      warning("tileSize set to 500 (millions of tiles). Be sure you want this!")
+    }
+        
+    # {{{ grab everything (after possibly warning the user about the above) 
+    if (tile != tileSize | !"TileMatrix" %in% getAvailableMatrices(proj)) {
+      message("Adding TileMatrix to ArchR project (this may take a while)...")
+      proj <- addTileMatrix(proj, force=TRUE, binarize=FALSE, tileSize=tileSize,
+                            ...)
+    } else { 
+      message("Found existing TileMatrix with desired size, using that...")
+    }
+    SCE <- as(getMatrixFromProject(proj, "TileMatrix"), "SingleCellExperiment") 
+    assayNames(SCE) <- "counts"
+    rowData(SCE)$end <- rowData(SCE)$start + (tile - 1)
+    rowRanges(SCE) <- as(rowData(SCE), "GRanges")
+    genome(SCE) <- archRgenome(proj)
+    si <- Seqinfo(genome=unique(genome(SCE)))
+    suppressWarnings(seqinfo(SCE) <- si[seqlevels(SCE)])
+    SCE <- trim(sort(sortSeqlevels(SCE)))
+    rownames(SCE) <- as.character(rowRanges(SCE))
+    # }}}
+
+  }
+
+  # since it's feasible to stack experiments (e.g. DEM + H3K4me + H3K27me)
+  rowData(SCE)$assay <- "FragmentCounts" # for binding to any other altExps
   message("Log-normalizing fragment counts...") 
-  SCE <- logNormCounts(SCE, assay.type="TileMatrix")
+  SCE <- logNormCounts(SCE, assay.type="counts")
   mainExpName(SCE) <- "FragmentCounts"
-  rowData(SCE)$end <- rowData(SCE)$start + (tile - 1) 
-  rowRanges(SCE) <- as(rowData(SCE), "GRanges")
-  rownames(SCE) <- as.character(rowRanges(SCE))
+  message("You may want to update mcols(SCE)$assay to be more specific.")
+  message("(For example, 'DEM' or 'H3K27me3' or 'H3K4me3' or 'ATAC'...)")
+
   colData(SCE) <- proj@cellColData
+  
+  message("Copying UMAP to reducedDim(SCE, 'UMAP')...")
   reducedDim(SCE, "UMAP") <- proj@embeddings$UMAP$df
   names(reducedDim(SCE, "UMAP")) <- c("UMAP1", "UMAP2")
+  message("Copying UMAP parameters to metadata(SCE)$UMAP$params...")
+  metadata(SCE)$UMAP_params <- list(params=proj@embeddings$UMAP$params)
 
   message("Copying LSI scores to reducedDim(SCE, 'LSI')...")
   reducedDim(SCE, "LSI") <- proj@reducedDims$IterativeLSI$matSVD
-  LSIdims <- ncol(reducedDim(SCE, "LSI"))
   names(reducedDim(SCE, "LSI")) <- paste0("LSI", seq_len(LSIdims))
+  
+  LSIdims <- ncol(reducedDim(SCE, "LSI"))
   if (colDat) { 
     message("Copying LSI dimensions to colData(SCE) for iSEE visualization...")
     for (i in colnames(reducedDim(SCE, "LSI"))) {
@@ -50,8 +120,10 @@ archRtoSCE <- function(proj, tile=500, addNMF=FALSE, k=30, colDat=FALSE, ...) {
     }
   }
 
+  message("Copying metadata...")
   if (addNMF) SCE <- addNMF(SCE, k=k, colDat=colDat, rowDat=TRUE)
-
+  md <- archRmetadata(proj)
+  for (i in names(md)) metadata(SCE)[[i]] <- md[[i]]
   message("Done.")
   return(SCE)
 

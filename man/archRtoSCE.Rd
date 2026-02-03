@@ -4,28 +4,48 @@
 \alias{archRtoSCE}
 \title{turn an ArchR project into a SingleCellExperiment}
 \usage{
-archRtoSCE(proj, tile = 500, addNMF = FALSE, k = 30, colDat = FALSE, ...)
+archRtoSCE(
+  proj,
+  how = c("tiles", "feats", "LSI"),
+  feats = NULL,
+  addNMF = FALSE,
+  colDat = FALSE,
+  LSIdim = "IterativeLSI",
+  tileSize = 500,
+  ...
+)
 }
 \arguments{
 \item{proj}{an ArchRproject}
 
-\item{tile}{tile size (500)}
+\item{how}{where to get counts from ('tiles','feats','LSI')}
+
+\item{feats}{GRanges of features to extract (ideally 500bp; NULL)}
 
 \item{addNMF}{add an NMF decomposition of logCounts? (FALSE)}
 
-\item{k}{rank for the NMF decomposition on logCounts (30)}
-
 \item{colDat}{add LSI and/or NMF scores to colData(SCE)? (FALSE)}
 
-\item{...}{additional arguments to pass to ArchR::addTileMatrix}
+\item{LSIdim}{name of IterativeLSI reducedDim ("IterativeLSI")}
+
+\item{tileSize}{tileSize (default is 500, but see details for more)}
+
+\item{...}{additional arguments}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{         a SingleCellExperiment 
 }\if{html}{\out{</div>}}
 }
 \description{
-The default tile size is 500bp, just like ArchR's default.
+turn an ArchR project into a SingleCellExperiment
 }
 \details{
-presumes LSI and UMAP. you will almost certainly want to tweak this.
+Presumes LSI and UMAP. you will almost certainly want to tweak this.
+If !is.null(feats), (GRanges, please!) we assume that how == "feats"
+If you are working with single-cell histone or transcription factor
+data, you will most likely want to use larger (5kb-50kb) tiles (see
+Janssens et al, Nature Protocols, 2024 for sciCUT&Tag benchmarks).
+This function has changed recently (2026) and the assumption is
+that most users will want a subset of features. Pay attention to
+any warning messages -- they can save you a lot of time and RAM!
 }
