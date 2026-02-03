@@ -2,6 +2,7 @@
 
 export(addIgvTrack)
 export(addNMF)
+export(archRbarCodes)
 export(archRiterLSI)
 export(archRmetadata)
 export(archRtileSize)
