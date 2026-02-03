@@ -6,8 +6,6 @@
 #'
 #' @return  a list with embeddings, outliers to exclude, features GRanges, etc.
 #'
-#' @import Seqinfo
-#'
 #' @export
 #'
 archRiterLSI <- function(proj, LSIdim="IterativeLSI", keep=NULL) {
@@ -31,9 +29,7 @@ archRiterLSI <- function(proj, LSIdim="IterativeLSI", keep=NULL) {
     names(LSIGR) <- as.character(LSIGR)
     LSIGR$rowSums <- LSIF$rowSums
     genome(LSIGR) <- archRgenome(proj)
-    si <- Seqinfo(genome=unique(genome(LSIGR)))
-    suppressWarnings(seqinfo(LSIGR) <- si[seqlevels(LSIGR)])
-    res$LSIFeatures <- trim(sort(sortSeqlevels(LSIGR)))
+    res$LSIFeatures <- sort(sortSeqlevels(LSIGR))
   }
 
   # extract right and left singular vectors and the diagonal

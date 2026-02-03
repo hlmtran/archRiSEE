@@ -83,9 +83,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     rowData(SCE)$end <- rowData(SCE)$start + (tile - 1)
     rowRanges(SCE) <- as(rowData(SCE), "GRanges")
     genome(SCE) <- archRgenome(proj)
-    si <- Seqinfo(genome=unique(genome(SCE)))
-    suppressWarnings(seqinfo(SCE) <- si[seqlevels(SCE)])
-    SCE <- trim(sort(sortSeqlevels(SCE)))
+    SCE <- sort(sortSeqlevels(SCE))
     rownames(SCE) <- as.character(rowRanges(SCE))
     # }}}
 
