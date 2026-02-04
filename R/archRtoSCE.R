@@ -82,6 +82,14 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     assayNames(SCE) <- "counts"
     rowData(SCE)$end <- rowData(SCE)$start + (tile - 1)
     rowRanges(SCE) <- as(rowData(SCE), "GRanges")
+    
+    # flag features used for LSI, if found
+    LSIFeats <- archRiterLSI(proj)$LSIFeatures
+    if (is(LSIFeats, "GRanges")) {
+      message("Flagging features which were used for iterative LSI...")
+      rowRanges(SCE)$usedForLSI <- rowRanges(SCE) %in% LSIFeats
+    }
+
     genome(SCE) <- archRgenome(proj)
     SCE <- sort(sortSeqlevels(SCE))
     rownames(SCE) <- as.character(rowRanges(SCE))
