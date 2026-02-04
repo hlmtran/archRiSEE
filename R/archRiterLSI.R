@@ -16,12 +16,13 @@ archRiterLSI <- function(proj, LSIdim="IterativeLSI", keep=NULL) {
   oddities <- c("LSIFeatures", "u", "d", "v", "idf")
 
   res <- list() 
-  for (k in setdiff(keep, oddities)) res[[k]] <- .LSI(proj, LSIdim)[[k]]
+  LSI <- .LSI(proj, LSIdim)
+  for (k in setdiff(keep, oddities)) res[[k]] <- LSI[[k]]
 
   # convert LSIFeatures to a GRanges:
   if ("LSIFeatures" %in% keep) {
     width <- archRtileSize(proj)        
-    LSIF <- .LSI(proj, LSIdim)[["LSIFeatures"]]
+    LSIF <- LSI[["LSIFeatures"]]
     LSIGR <- GRanges(seqnames=LSIF$seqnames, 
                      ranges=IRanges(start=LSIF$start, 
                                     width=rep(width, nrow(LSIF))),
@@ -33,11 +34,11 @@ archRiterLSI <- function(proj, LSIdim="IterativeLSI", keep=NULL) {
 
   # extract right and left singular vectors and the diagonal
   if (any(c("u","d","v") %in% keep)) { 
-    for (k in c("u", "d", "v")) res[[k]] <- .LSI(proj, LSIdim)[["svd"]][[k]]
+    for (k in c("u", "d", "v")) res[[k]] <- LSI[["svd"]][[k]]
   }
 
   # idf is special, recompute it on the fly:
-  if ("idf" %in% keep) res[["idf"]] <- with(.LSI(proj, LSIdim), nCol/rowSm)
+  if ("idf" %in% keep) res[["idf"]] <- LSI$nCol/LSI$rowSm
  
   # done
   return(res)
