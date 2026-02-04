@@ -11,7 +11,7 @@ archRtoSCE(
   addNMF = FALSE,
   colDat = FALSE,
   LSIdim = "IterativeLSI",
-  tileSize = 500,
+  tileSize = NULL,
   ...
 )
 }
@@ -28,7 +28,7 @@ archRtoSCE(
 
 \item{LSIdim}{name of IterativeLSI reducedDim ("IterativeLSI")}
 
-\item{tileSize}{tileSize (default is 500, but see details for more)}
+\item{tileSize}{tileSize (default is whatever is in use)}
 
 \item{...}{additional arguments}
 }

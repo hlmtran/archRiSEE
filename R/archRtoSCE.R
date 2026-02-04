@@ -6,7 +6,7 @@
 #' @param addNMF        add an NMF decomposition of logCounts? (FALSE)
 #' @param colDat        add LSI and/or NMF scores to colData(SCE)? (FALSE)
 #' @param LSIdim        name of IterativeLSI reducedDim ("IterativeLSI") 
-#' @param tileSize      tileSize (default is 500, but see details for more)
+#' @param tileSize      tileSize (default is whatever is in use)
 #' @param ...           additional arguments
 #'
 #' @return              a SingleCellExperiment 
@@ -27,13 +27,14 @@
 #'
 #' @export
 #'
-archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FALSE, colDat=FALSE, LSIdim="IterativeLSI", tileSize=500, ...) { 
+archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FALSE, colDat=FALSE, LSIdim="IterativeLSI", tileSize=NULL, ...) { 
 
   if (!require(ArchR)) stop("This function won't work without an ArchR install")
   how <- match.arg(how) 
   if (!is.null(feats)) how <- "feats"
   LSI <- archRiterLSI(proj)
   tile <- archRtileSize(proj)
+  if (is.null(tileSize)) tileSize <- tile
 
   # key: which ones?
   if (how == "feats") { 
