@@ -106,10 +106,10 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   metadata(SCE)$UMAP_params <- list(params=proj@embeddings$UMAP$params)
 
   message("Copying LSI scores to reducedDim(SCE, 'LSI')...")
-  reducedDim(SCE, "LSI") <- proj@reducedDims$IterativeLSI$matSVD
-  names(reducedDim(SCE, "LSI")) <- paste0("LSI", seq_len(LSIdims))
+  reducedDim(SCE, "LSI") <- .LSI(proj)$matSVD
+  colnames(reducedDim(SCE,"LSI")) <- 
+    paste0("LSI", seq_len(ncol(reducedDim(SCE, "LSI"))))
   
-  LSIdims <- ncol(reducedDim(SCE, "LSI"))
   if (colDat) { 
     message("Copying LSI dimensions to colData(SCE) for iSEE visualization...")
     for (i in colnames(reducedDim(SCE, "LSI"))) {
