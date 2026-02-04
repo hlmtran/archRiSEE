@@ -20,14 +20,13 @@ archRiterLSI <- function(proj, LSIdim="IterativeLSI", keep=NULL) {
 
   # convert LSIFeatures to a GRanges:
   if ("LSIFeatures" %in% keep) {
-    LSIF <- .LSI(proj, LSIdim)[["LSIFeatures"]]
-    # in order to make this usable, we need to find out the tile size:
     width <- archRtileSize(proj)        
-    LSIGR <- with(LSIF, 
-                  GRanges(seqnames=seqnames, 
-                          ranges=IRanges(start=start, width=width)))
+    LSIF <- .LSI(proj, LSIdim)[["LSIFeatures"]]
+    LSIGR <- GRanges(seqnames=LSIF$seqnames, 
+                     ranges=IRanges(start=LSIF$start, 
+                                    width=rep(width, nrow(LSIF))),
+                     rowSums=LSIF$rowSums)
     names(LSIGR) <- as.character(LSIGR)
-    LSIGR$rowSums <- LSIF$rowSums
     genome(LSIGR) <- archRgenome(proj)
     res$LSIFeatures <- sort(sortSeqlevels(LSIGR))
   }
