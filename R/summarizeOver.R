@@ -11,7 +11,7 @@
 #'                you'll probably also want to run logNormCounts on the result.
 #'
 #' @seealso       scuttle::logNormCounts
-#' @seealso       SSBtools
+#' @seealso       SSBtools::fac2sparse
 #' 
 #' @examples
 #' 
@@ -23,11 +23,11 @@
 #'   altExp(MLLK27, "K27_50kb_forNBM") <- MLLK27_50kb
 #' }
 #' 
-#' @import      BiocParallel
+#' @import        SSBtools
 #'
 #' @export 
 #'
-summarizeOver <- function(x, gr, asy=NULL, BPPARAM=MulticoreParam()) {
+summarizeOver <- function(x, gr, asy=NULL) {
 
   how <- match.arg(how)
   if (is.null(asy)) asy <- assayNames(x)[1]

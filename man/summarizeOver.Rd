@@ -4,7 +4,7 @@
 \alias{summarizeOver}
 \title{given an SCE and a set of features, summarize counts over those features}
 \usage{
-summarizeOver(x, gr, asy = NULL, BPPARAM = MulticoreParam())
+summarizeOver(x, gr, asy = NULL)
 }
 \arguments{
 \item{x}{a SummarizedExperiment, SingleCellExperiment, or similar}
@@ -42,6 +42,6 @@ given an SCE and a set of features, summarize counts over those features
 \if{html}{\out{<div class="sourceCode">}}\preformatted{  scuttle::logNormCounts
 }\if{html}{\out{</div>}}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{  SSBtools
+\if{html}{\out{<div class="sourceCode">}}\preformatted{  SSBtools::fac2sparse
 }\if{html}{\out{</div>}}
 }

@@ -7,8 +7,8 @@
 #' @param colDat        add LSI and/or NMF scores to colData(SCE)? (FALSE)
 #' @param LSIdim        name of IterativeLSI reducedDim ("IterativeLSI") 
 #' @param tileSize      tileSize (default is whatever is in use)
-#' @param keepbinary    keep tiles binarized if they are already? (TRUE) 
-#' @param ...           additional arguments
+#' @param keepbinary    keep tiles binarized if they are already? (FALSE) 
+#' @param ...           additional arguments for ArchR::getMatrixFromProject()
 #'
 #' @return              a SingleCellExperiment 
 #'
@@ -68,7 +68,6 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     rownames(SCE) <- as.character(rowRanges(SCE))
     rowData(SCE)$usedForLSI <- TRUE
     assayNames(SCE) <- "counts"
-    # 
 
   } else { 
 
@@ -86,7 +85,8 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
       } else { 
         if (bb) {
           message("Existing TileMatrix is binarized, replacing with counts...")
-          proj <- addTileMatrix(proj, force=TRUE, binarize=FALSE, tileSize=tile)
+          proj <- addTileMatrix(proj, force=TRUE, binarize=FALSE, tileSize=tile,
+                                )
         }
       }
     } else { 
@@ -95,11 +95,13 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
       proj <- addTileMatrix(proj,force=TRUE,binarize=bb,tileSize=tileSize, ...)
     }
     
-    SCE <- as(getMatrixFromProject(proj, "TileMatrix", binarize=bb), 
+    SCE <- as(getMatrixFromProject(proj, "TileMatrix", binarize=bb, ...), 
               "SingleCellExperiment")
     assayNames(SCE) <- "counts"
     rowData(SCE)$end <- rowData(SCE)$start + (tile - 1)
     rowRanges(SCE) <- as(rowData(SCE), "GRanges")
+    rownames(SCE) <- as(rowRanges(SCE), "character")
+    genome(SCE) <- g
     
     # flag features used for LSI, if found
     if (!"usedForLSI" %in% names(rowData(SCE))) {

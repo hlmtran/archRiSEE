@@ -31,9 +31,9 @@ archRtoSCE(
 
 \item{tileSize}{tileSize (default is whatever is in use)}
 
-\item{keepbinary}{keep tiles binarized if they are already? (TRUE)}
+\item{keepbinary}{keep tiles binarized if they are already? (FALSE)}
 
-\item{...}{additional arguments}
+\item{...}{additional arguments for ArchR::getMatrixFromProject()}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{         a SingleCellExperiment 
