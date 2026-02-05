@@ -101,6 +101,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     rowData(SCE)$end <- rowData(SCE)$start + (tile - 1)
     rowRanges(SCE) <- as(rowData(SCE), "GRanges")
     rownames(SCE) <- as(rowRanges(SCE), "character")
+    SCE <- sort(sortSeqlevels(SCE))
     genome(SCE) <- g
     
     # flag features used for LSI, if found
@@ -108,18 +109,17 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
       LSIFeats <- archRiterLSI(proj)$LSIFeatures
       if (is(LSIFeats, "GRanges")) { 
         message("Flagging features which were used for iterative LSI...")
-        rowRanges(SCE)$usedForLSI <- rowRanges(SCE) %in% LSIFeats
+        ol <- findOverlaps(rowRanges(SCE), LSIFeats)
+        rowRanges(SCE)$usedForLSI <- FALSE
+        rowRanges(SCE)$usedForLSI[queryHits(ol)] <- TRUE
       }
     }
-
-    genome(SCE) <- g
-    SCE <- sort(sortSeqlevels(SCE))
-    rownames(SCE) <- as.character(rowRanges(SCE))
 
   }
 
   # since it's feasible to stack experiments (e.g. DEM + H3K4me + H3K27me)
   mainExpName(SCE) <- "FragmentCounts"
+  rowRanges(SCE)$idx <- NULL # irrelevant to us and gets in the way
   rowData(SCE)$assay <- "FragmentCounts" # for binding to any other altExps
   message("You may want to update mcols(SCE)$assay to be more specific.")
   message("(For example, 'DEM' or 'H3K27me3' or 'H3K4me3' or 'ATAC'...)")
