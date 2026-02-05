@@ -1,4 +1,4 @@
-#' stack (rbind) two SCE-like objects for the same cells to integrate
+#' stack (rbind) multiple SCE-like objects for the same cells to integrate
 #' 
 #' @param lst   a list of SCE-like objects with identical colnames()
 #' @param ...   currently unused parameters for convenience functions
@@ -24,7 +24,7 @@
 #'
 #' @export
 #'
-stack <- function(lst, ...) {
+stackAssays <- function(lst, ...) {
 
   if (is.null(names(lst))) {
     stop("Your list of experiments must have names to disambiguate them.")
@@ -71,7 +71,7 @@ stack <- function(lst, ...) {
     # flag features of interest in each constituent dataset
     if (identical(rownames(stacked), rownames(lst[[j]]))) {
       n <- grep(paste0(j, ".usedForLSI"), names(rowData(lst[[j]])), val=TRUE)
-      rowRanges(stacked)[, n] <- rowRanges(lst[[j]])[, n]
+      mcols(stacked)[, n] <- mcols(lst[[j]])[, n]
     }
   }
 

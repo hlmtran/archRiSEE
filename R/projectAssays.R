@@ -13,7 +13,7 @@
 #'
 #' @export
 #'
-project <- function(x, y, z="UMAP_projected") { 
+projectAssays <- function(x, y, z="UMAP_projected") { 
 
   stop("Not quite done yet")
 
