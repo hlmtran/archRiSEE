@@ -150,14 +150,13 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   # could also add others if it makes sense here 
   for (mat in c("GeneScoreMatrix", "PeakMatrix")) { 
     if (mat %in% getAvailableMatrices(proj)) {
-      message("Copying ", mat, " to altExp(SCE, '", mat, "')...")
+      message("Attempting to add ", mat, " to altExp(SCE, '", mat, "')...")
       if (mat == "GeneScoreMatrix") { 
-        altExp(SCE, mat) <- 
-          archRgeneScoresWithRanges(getMatrixFromProject(proj, mat), genome=g)
+        altExp(SCE, mat) <- archRgeneScoreMatrix(proj, genome=g)
+      } else if (mat == "PeakMatrix" & !is.null(getPeakSet(proj))) { 
+        altExp(SCE, mat) <- archRpeakMatrix(proj, genome=g)
       } else { 
         altExp(SCE, mat) <- getMatrixFromProject(proj, mat)
-        rownames(altExp(SCE, mat)) <- as.character(rowRanges(altExp(SCE, mat)))
-        genome(rowRanges(altExp(SCE, mat))) <- g
       }
     }
   }

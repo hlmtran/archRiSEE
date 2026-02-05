@@ -1,13 +1,16 @@
 #' reformat ArchR GeneScoreMatrix rowdata into a GRanges
 #'
-#' @param   se    the SummarizedExperiment holding the GeneScoreMatrix
+#' @param   proj  the ArchRproject holding the GeneScoreMatrix
 #' 
-#' @return        the same data as a RangedSummarizedExperiment
+#' @return        the gene score data as a RangedSummarizedExperiment
 #'
 #' @export
 #'
-archRgeneScoresWithRanges <- function(se, genome=NULL) {
+archRgeneScoreMatrix <- function(proj, genome=NULL) {
 
+  if (!"GeneScoreMatrix" %in% getAvailableMatrices(proj)) return(NULL)
+
+  se <- getMatrixFromProject(proj, "GeneScoreMatrix") 
   rd <- rowData(se)
   rownames(rd) <- rd$name
   rd$strand <- c('+','-')[rd$strand]
