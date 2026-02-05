@@ -22,7 +22,6 @@
 #'          any warning messages -- they can save you a lot of time and RAM!
 #'          This function is way too big nowadays and should be refactored. 
 #'
-#' @import RcppML
 #' @import scuttle
 #' @import GenomicRanges
 #' @import SingleCellExperiment
@@ -38,7 +37,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   tile <- archRtileSize(proj)
   if (is.null(tileSize)) tileSize <- tile
   g <- archRgenome(proj)
-  # "binarize beforehand"
+  # "binarized beforehand"
   bb <- FALSE
 
   # key: which ones?
@@ -153,7 +152,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
       message("Attempting to add ", mat, " to altExp(SCE, '", mat, "')...")
       if (mat == "GeneScoreMatrix") { 
         altExp(SCE, mat) <- archRgeneScoreMatrix(proj, genome=g)
-      } else if (mat == "PeakMatrix" & !is.null(getPeakSet(proj))) { 
+      } else if (mat == "PeakMatrix") { 
         altExp(SCE, mat) <- archRpeakMatrix(proj, genome=g)
       } else { 
         altExp(SCE, mat) <- getMatrixFromProject(proj, mat)
@@ -163,9 +162,10 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
 
   if (addNMF) {
     if (max(assay(SCE)) > 1) {
+      warning("Running addNMF() on logcounts; consider addTopicModel() though") 
       SCE <- addNMF(SCE, k=k, colDat=colDat, rowDat=TRUE)
     } else { 
-      warning("Your fragment counts are binarized, NMF will not work properly")
+      warning("Your fragment counts are binarized; consider addTopicModel()") 
     }
   }
 
