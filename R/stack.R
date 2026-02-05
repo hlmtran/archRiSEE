@@ -18,7 +18,7 @@
 #'              because the default binary output makes no sense with NMF.
 #'              If you plan to use raw or lognormalized FragmentCounts again, 
 #'              make sure that the object you want to use these on is lst[[1]],
-#'              else you'll have to 
+#'              else you'll have to swapAltExp(stacked, whatever) later on.
 #'
 #' @import      SingleCellExperiment
 #'
@@ -66,11 +66,12 @@ stack <- function(lst, ...) {
       warning("altExp(stacked, '", m, "') exists and will be replaced")
     }
     altExp(stacked, m) <- as(lst[[j]], "SummarizedExperiment")
-    
+    rownames(altExp(stacked, m)) <- as.character(rowRanges(lst[[j]]))
+
     # flag features of interest in each constituent dataset
     if (identical(rownames(stacked), rownames(lst[[j]]))) {
       n <- grep(paste0(j, ".usedForLSI"), names(rowData(lst[[j]])), val=TRUE)
-      rowData(stacked)[, n] <- rowData(lst[[j]])[, n]
+      rowRanges(stacked)[, n] <- rowRanges(lst[[j]])[, n]
     }
   }
 

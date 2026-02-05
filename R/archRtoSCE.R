@@ -37,6 +37,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   LSI <- archRiterLSI(proj)
   tile <- archRtileSize(proj)
   if (is.null(tileSize)) tileSize <- tile
+  g <- archRgenome(proj)
   # "binarize beforehand"
   bb <- FALSE
 
@@ -83,8 +84,10 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
         message("Found existing TileMatrix with desired size, using that...")
         message("(Existing matrix is of type ", b, ", if that matters!)")
       } else { 
-        message("You may need to add a non-binarized matrix if this fails.") 
-        message("(Existing matrix is of type ", b, ", for reference.)")
+        if (bb) {
+          message("Existing TileMatrix is binarized, replacing with counts...")
+          proj <- addTileMatrix(proj, force=TRUE, binarize=FALSE, tileSize=tile)
+        }
       }
     } else { 
       message("Adding TileMatrix to ArchR project (this may take a while)...")
@@ -107,10 +110,9 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
       }
     }
 
-    genome(SCE) <- archRgenome(proj)
+    genome(SCE) <- g
     SCE <- sort(sortSeqlevels(SCE))
     rownames(SCE) <- as.character(rowRanges(SCE))
-    #
 
   }
 
@@ -122,7 +124,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   if (max(assay(SCE)) > 1) { 
     message("Log-normalizing fragment counts...") 
     SCE <- logNormCounts(SCE, assay.type="counts")
-  } else { 
+  } else {
     message("Binarized data, log-normalization makes no sense...")
   }
   colData(SCE) <- getCellColData(proj)
@@ -143,11 +145,18 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     }
   }
 
-  # could add others if it makes sense here 
+  # could also add others if it makes sense here 
   for (mat in c("GeneScoreMatrix", "PeakMatrix")) { 
     if (mat %in% getAvailableMatrices(proj)) {
       message("Copying ", mat, " to altExp(SCE, '", mat, "')...")
-      altExp(SCE, mat) <- getMatrixFromProject(proj, mat)
+      if (mat == "GeneScoreMatrix") { 
+        altExp(SCE, mat) <- 
+          archRgeneScoresWithRanges(getMatrixFromProject(proj, mat), genome=g)
+      } else { 
+        altExp(SCE, mat) <- getMatrixFromProject(proj, mat)
+        rownames(altExp(SCE, mat)) <- as.character(rowRanges(altExp(SCE, mat)))
+        genome(rowRanges(altExp(SCE, mat))) <- g
+      }
     }
   }
 

@@ -30,6 +30,6 @@ stack (rbind) two SCE-like objects for the same cells to integrate
          because the default binary output makes no sense with NMF.
          If you plan to use raw or lognormalized FragmentCounts again, 
          make sure that the object you want to use these on is lst[[1]],
-         else you'll have to 
+         else you'll have to swapAltExp(stacked, whatever) later on.
 }\if{html}{\out{</div>}}
 }
