@@ -51,4 +51,5 @@ Janssens et al, Nature Protocols, 2024 for sciCUT&Tag benchmarks).
 This function has changed recently (2026) and the assumption is
 that most users will want a subset of features. Pay attention to
 any warning messages -- they can save you a lot of time and RAM!
+This function is way too big nowadays and should be refactored.
 }

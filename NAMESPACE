@@ -3,7 +3,6 @@
 export(addBlusters)
 export(addIgvTrack)
 export(addNMF)
-export(archRbarCodes)
 export(archRgenome)
 export(archRiterLSI)
 export(archRmetadata)

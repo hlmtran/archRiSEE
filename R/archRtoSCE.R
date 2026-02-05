@@ -20,6 +20,7 @@
 #'          This function has changed recently (2026) and the assumption is
 #'          that most users will want a subset of features. Pay attention to 
 #'          any warning messages -- they can save you a lot of time and RAM!
+#'          This function is way too big nowadays and should be refactored. 
 #'
 #' @import RcppML
 #' @import scuttle
@@ -36,6 +37,8 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   LSI <- archRiterLSI(proj)
   tile <- archRtileSize(proj)
   if (is.null(tileSize)) tileSize <- tile
+  # "binarize beforehand"
+  bb <- FALSE
 
   # key: which ones?
   if (how == "feats") { 
@@ -43,12 +46,11 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     # grab user-provided features 
     message("Adding 'feats' matrix to project (usually fast)...")
     proj <- addFeatureMatrix(proj, features=feats, matrixName="feats",
-                             binarize=FALSE, force=TRUE)
+                             binarize=bb, force=TRUE)
     message("Converting to a SingleCellExperiment...") 
     SCE <- as(getMatrixFromProject(proj, "feats"), "SingleCellExperiment") 
     rownames(SCE) <- as.character(rowRanges(SCE))
     assayNames(SCE) <- "counts"
-    # 
 
   } else if (how == "LSI") {
     
@@ -59,10 +61,11 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     # grab LSI-defined features
     message("Adding 'LSI' matrix to project (usually fast)...")
     proj <- addFeatureMatrix(proj, features=LSI$LSIFeatures, 
-                             matrixName="LSI", binarize=FALSE,
+                             matrixName="LSI", binarize=bb,
                              force=TRUE)
     SCE <- as(getMatrixFromProject(proj, "LSI"), "SingleCellExperiment") 
     rownames(SCE) <- as.character(rowRanges(SCE))
+    rowData(SCE)$usedForLSI <- TRUE
     assayNames(SCE) <- "counts"
     # 
 
@@ -96,10 +99,12 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     rowRanges(SCE) <- as(rowData(SCE), "GRanges")
     
     # flag features used for LSI, if found
-    LSIFeats <- archRiterLSI(proj)$LSIFeatures
-    if (is(LSIFeats, "GRanges")) {
-      message("Flagging features which were used for iterative LSI...")
-      rowRanges(SCE)$usedForLSI <- rowRanges(SCE) %in% LSIFeats
+    if (!"usedForLSI" %in% names(rowData(SCE))) {
+      LSIFeats <- archRiterLSI(proj)$LSIFeatures
+      if (is(LSIFeats, "GRanges")) { 
+        message("Flagging features which were used for iterative LSI...")
+        rowRanges(SCE)$usedForLSI <- rowRanges(SCE) %in% LSIFeats
+      }
     }
 
     genome(SCE) <- archRgenome(proj)
