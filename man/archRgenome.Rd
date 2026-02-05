@@ -4,10 +4,12 @@
 \alias{archRgenome}
 \title{figure out which genome was used by ArchR}
 \usage{
-archRgenome(proj)
+archRgenome(proj, human = TRUE)
 }
 \arguments{
 \item{proj}{an ArchRproject}
+
+\item{human}{human genome? (TRUE; see details)}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{         a character string indicating the genome
@@ -15,4 +17,8 @@ archRgenome(proj)
 }
 \description{
 figure out which genome was used by ArchR
+}
+\details{
+\if{html}{\out{<div class="sourceCode">}}\preformatted{        this function assumes BSgenome.Hsapiens.UCSC.* was used
+}\if{html}{\out{</div>}}
 }

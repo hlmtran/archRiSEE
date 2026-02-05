@@ -12,6 +12,7 @@
 #'
 archRmetadata <- function(proj, lst=NULL) { 
 
+  require(ArchR)
   def <- c('project','sample','cell')
   if (is.null(lst)) lst <- setNames(paste0(def, "Metadata"), def)
   as.list(unlist(lapply(lst, function(x) 

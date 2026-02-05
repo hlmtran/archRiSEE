@@ -10,13 +10,14 @@
 #'
 archRiterLSI <- function(proj, LSIdim="IterativeLSI", keep=NULL) {
 
+  require(ArchR)
   if (is.null(keep)) {
     keep <- c("matSVD", "outliers", "LSIFeatures", "u", "d", "v", "idf")
   }
   oddities <- c("LSIFeatures", "u", "d", "v", "idf")
 
   res <- list() 
-  LSI <- .LSI(proj, LSIdim)
+  LSI <- getReducedDims(proj, LSIdim, returnMatrix=FALSE)
   for (k in setdiff(keep, oddities)) res[[k]] <- LSI[[k]]
 
   # convert LSIFeatures to a GRanges:
@@ -44,8 +45,3 @@ archRiterLSI <- function(proj, LSIdim="IterativeLSI", keep=NULL) {
   return(res)
 
 }
-
-
-
-# helper fn
-.LSI <- function(proj, LSIdim="IterativeLSI") slot(proj,"reducedDims")[[LSIdim]]

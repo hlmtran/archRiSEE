@@ -4,18 +4,10 @@
 \alias{stack}
 \title{stack (rbind) two SCE-like objects for the same cells to integrate}
 \usage{
-stack(x, y, NMF = TRUE, UMAP = TRUE, k = 30, ...)
+stack(lst, ...)
 }
 \arguments{
-\item{x}{the first object (its rows will be on top)}
-
-\item{y}{the second object (its rows will be below y)}
-
-\item{NMF}{run NMF on the merged feature set? (TRUE)}
-
-\item{UMAP}{run UMAP on the NMF results? (TRUE; see details)}
-
-\item{k}{rank of the NMF decomposition to shoot for (default: 30)}
+\item{lst}{a list of SCE-like objects with identical colnames()}
 
 \item{...}{currently unused parameters for convenience functions}
 
@@ -34,5 +26,10 @@ stack (rbind) two SCE-like objects for the same cells to integrate
          to ensure that the desired features from both modalities are 
          present. After that the process tends to be iterative, which is
          the whole point of using iSEE to interact with the results.
+         Currently, NMF and UMAP on the combined features is disabled
+         because the default binary output makes no sense with NMF.
+         If you plan to use raw or lognormalized FragmentCounts again, 
+         make sure that the object you want to use these on is lst[[1]],
+         else you'll have to 
 }\if{html}{\out{</div>}}
 }

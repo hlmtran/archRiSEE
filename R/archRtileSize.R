@@ -9,7 +9,8 @@
 #' @export
 #'
 archRtileSize <- function(proj) { 
-  
+
+  require(ArchR)
   sampleTileSizes <- 
     sapply(getSampleColData(proj)[, "ArrowFiles"],
            function(x) unique(h5read(x, "TileMatrix/Info/Params/")$tileSize))

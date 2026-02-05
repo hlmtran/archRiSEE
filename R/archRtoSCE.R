@@ -7,6 +7,7 @@
 #' @param colDat        add LSI and/or NMF scores to colData(SCE)? (FALSE)
 #' @param LSIdim        name of IterativeLSI reducedDim ("IterativeLSI") 
 #' @param tileSize      tileSize (default is whatever is in use)
+#' @param keepbinary    keep tiles binarized if they are already? (TRUE) 
 #' @param ...           additional arguments
 #'
 #' @return              a SingleCellExperiment 
@@ -27,7 +28,7 @@
 #'
 #' @export
 #'
-archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FALSE, colDat=FALSE, LSIdim="IterativeLSI", tileSize=NULL, ...) { 
+archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FALSE, colDat=FALSE, LSIdim="IterativeLSI", tileSize=NULL, keepbinary=TRUE, ...) {
 
   if (!require(ArchR)) stop("This function won't work without an ArchR install")
   how <- match.arg(how) 
@@ -39,7 +40,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   # key: which ones?
   if (how == "feats") { 
 
-    # {{{ grab user-provided features 
+    # grab user-provided features 
     message("Adding 'feats' matrix to project (usually fast)...")
     proj <- addFeatureMatrix(proj, features=feats, matrixName="feats",
                              binarize=FALSE, force=TRUE)
@@ -47,7 +48,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     SCE <- as(getMatrixFromProject(proj, "feats"), "SingleCellExperiment") 
     rownames(SCE) <- as.character(rowRanges(SCE))
     assayNames(SCE) <- "counts"
-    # }}}
+    # 
 
   } else if (how == "LSI") {
     
@@ -55,7 +56,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
       warning("IterativeLSI run with tile size of ", tile, ", be sure it's OK!")
     }
 
-    # {{{ grab LSI-defined features
+    # grab LSI-defined features
     message("Adding 'LSI' matrix to project (usually fast)...")
     proj <- addFeatureMatrix(proj, features=LSI$LSIFeatures, 
                              matrixName="LSI", binarize=FALSE,
@@ -63,7 +64,7 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     SCE <- as(getMatrixFromProject(proj, "LSI"), "SingleCellExperiment") 
     rownames(SCE) <- as.character(rowRanges(SCE))
     assayNames(SCE) <- "counts"
-    # }}}
+    # 
 
   } else { 
 
@@ -71,15 +72,25 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
       warning("tileSize set to 500 (millions of tiles). Be sure you want this!")
     }
         
-    # {{{ grab everything (after possibly warning the user about the above) 
-    if (tile != tileSize | !"TileMatrix" %in% getAvailableMatrices(proj)) {
-      message("Adding TileMatrix to ArchR project (this may take a while)...")
-      proj <- addTileMatrix(proj, force=TRUE, binarize=FALSE, tileSize=tileSize,
-                            ...)
+    # grab everything (after possibly warning the user about the above) 
+    if (tile == tileSize & "TileMatrix" %in% getAvailableMatrices(proj)) {
+      b <- unique(sapply(getArrowFiles(proj), h5read, "TileMatrix/Info/Class"))
+      bb <- (b == "Sparse.Binary.Matrix")
+      if (keepbinary) {
+        message("Found existing TileMatrix with desired size, using that...")
+        message("(Existing matrix is of type ", b, ", if that matters!)")
+      } else { 
+        message("You may need to add a non-binarized matrix if this fails.") 
+        message("(Existing matrix is of type ", b, ", for reference.)")
+      }
     } else { 
-      message("Found existing TileMatrix with desired size, using that...")
+      message("Adding TileMatrix to ArchR project (this may take a while)...")
+      bb <- FALSE
+      proj <- addTileMatrix(proj,force=TRUE,binarize=bb,tileSize=tileSize, ...)
     }
-    SCE <- as(getMatrixFromProject(proj, "TileMatrix"), "SingleCellExperiment") 
+    
+    SCE <- as(getMatrixFromProject(proj, "TileMatrix", binarize=bb), 
+              "SingleCellExperiment")
     assayNames(SCE) <- "counts"
     rowData(SCE)$end <- rowData(SCE)$start + (tile - 1)
     rowRanges(SCE) <- as(rowData(SCE), "GRanges")
@@ -94,41 +105,56 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     genome(SCE) <- archRgenome(proj)
     SCE <- sort(sortSeqlevels(SCE))
     rownames(SCE) <- as.character(rowRanges(SCE))
-    # }}}
+    #
 
   }
 
   # since it's feasible to stack experiments (e.g. DEM + H3K4me + H3K27me)
-  rowData(SCE)$assay <- "FragmentCounts" # for binding to any other altExps
-  message("Log-normalizing fragment counts...") 
-  SCE <- logNormCounts(SCE, assay.type="counts")
   mainExpName(SCE) <- "FragmentCounts"
+  rowData(SCE)$assay <- "FragmentCounts" # for binding to any other altExps
   message("You may want to update mcols(SCE)$assay to be more specific.")
   message("(For example, 'DEM' or 'H3K27me3' or 'H3K4me3' or 'ATAC'...)")
-
-  colData(SCE) <- proj@cellColData
+  if (max(assay(SCE)) > 1) { 
+    message("Log-normalizing fragment counts...") 
+    SCE <- logNormCounts(SCE, assay.type="counts")
+  } else { 
+    message("Binarized data, log-normalization makes no sense...")
+  }
+  colData(SCE) <- getCellColData(proj)
   
   message("Copying UMAP to reducedDim(SCE, 'UMAP')...")
-  reducedDim(SCE, "UMAP") <- proj@embeddings$UMAP$df
+  reducedDim(SCE, "UMAP") <- getEmbedding(proj, "UMAP")[colnames(SCE), ]
   names(reducedDim(SCE, "UMAP")) <- c("UMAP1", "UMAP2")
-  message("Copying UMAP parameters to metadata(SCE)$UMAP$params...")
-  metadata(SCE)$UMAP_params <- list(params=proj@embeddings$UMAP$params)
-
+  message("Copying UMAP parameters to metadata(SCE)$UMAP...")
+  metadata(SCE)$UMAP <- getEmbedding(proj, "UMAP", returnDF=FALSE)$params
   message("Copying LSI scores to reducedDim(SCE, 'LSI')...")
-  reducedDim(SCE, "LSI") <- .LSI(proj)$matSVD
-  colnames(reducedDim(SCE,"LSI")) <- 
-    paste0("LSI", seq_len(ncol(reducedDim(SCE, "LSI"))))
-  
+  reducedDim(SCE, "LSI") <- getReducedDims(proj)[colnames(SCE), ]
+
   if (colDat) { 
     message("Copying LSI dimensions to colData(SCE) for iSEE visualization...")
     for (i in colnames(reducedDim(SCE, "LSI"))) {
       message("Adding ", i, " as colData(SCE)$", i)
-      colData(SCE)[, i] <- reducedDim(SCE, "LSI")[, i]
+      colData(SCE)[, i] <- reducedDim(SCE, "LSI")[colnames(SCE), i]
+    }
+  }
+
+  # could add others if it makes sense here 
+  for (mat in c("GeneScoreMatrix", "PeakMatrix")) { 
+    if (mat %in% getAvailableMatrices(proj)) {
+      message("Copying ", mat, " to altExp(SCE, '", mat, "')...")
+      altExp(SCE, mat) <- getMatrixFromProject(proj, mat)
+    }
+  }
+
+  if (addNMF) {
+    if (max(assay(SCE)) > 1) {
+      SCE <- addNMF(SCE, k=k, colDat=colDat, rowDat=TRUE)
+    } else { 
+      warning("Your fragment counts are binarized, NMF will not work properly")
     }
   }
 
   message("Copying metadata...")
-  if (addNMF) SCE <- addNMF(SCE, k=k, colDat=colDat, rowDat=TRUE)
   md <- archRmetadata(proj)
   for (i in names(md)) metadata(SCE)[[i]] <- md[[i]]
   message("Done.")

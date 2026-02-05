@@ -12,6 +12,7 @@ archRtoSCE(
   colDat = FALSE,
   LSIdim = "IterativeLSI",
   tileSize = NULL,
+  keepbinary = TRUE,
   ...
 )
 }
@@ -29,6 +30,8 @@ archRtoSCE(
 \item{LSIdim}{name of IterativeLSI reducedDim ("IterativeLSI")}
 
 \item{tileSize}{tileSize (default is whatever is in use)}
+
+\item{keepbinary}{keep tiles binarized if they are already? (TRUE)}
 
 \item{...}{additional arguments}
 }
