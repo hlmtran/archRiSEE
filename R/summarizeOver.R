@@ -3,53 +3,64 @@
 #' @param x       a SummarizedExperiment, SingleCellExperiment, or similar
 #' @param gr      a GRanges of features, or something coercible to GRanges
 #' @param asy     which assay to summarize? (whichever one is first) 
-#' @param BPPARAM BiocParallel parameters (default is MulticoreParam) 
+#' @param lognorm log-normalize the summarized counts? (TRUE) 
 #'
 #' @return        a SummarizedExperiment holding the summarized counts
 #'
 #' @details       the result is an SE because you'll want to make it an altExp.
-#'                you'll probably also want to run logNormCounts on the result.
 #'
 #' @seealso       scuttle::logNormCounts
-#' @seealso       SSBtools::fac2sparse
+#' @seealso       Matrix::fac2sparse
 #' 
 #' @examples
 #' 
 #' \dontrun{
 #'   library(rtracklayer) 
 #'   K27feats <- import("NBMK27_50kbp_LSIfeats.hg38.bed")
-#'   (MLLK27_50kb <- summarizeOver(MLLK27, K27feats))
+#'   MLLK27 <- altExp(stacked, "MLLK27.FragmentCounts")
+#'   rownames(MLLK27) <- as.character(granges(MLLK27))
+#'   (MLLK27_50kb <- summarizeOver(MLLK27, K27feats)))
 #'   MLLK27_50kb <- logNormCounts(MLLK27_50kb)
 #'   altExp(MLLK27, "K27_50kb_forNBM") <- MLLK27_50kb
 #' }
 #' 
-#' @import        SSBtools
+#' @import        Matrix 
 #'
 #' @export 
 #'
-summarizeOver <- function(x, gr, asy=NULL) {
+summarizeOver <- function(x, gr, asy=NULL, lognorm=TRUE, ...) {
 
-  how <- match.arg(how)
   if (is.null(asy)) asy <- assayNames(x)[1]
-  stopifnot(is(x, "RangedSummarizedExperiment"))
-  stopifnot(is(gr, "GRanges"))
-  if (is.null(names(gr))) {
-    names(gr) <- as.character(gr)
+  if (!is(x, "RangedSummarizedExperiment")) {
+    xx <- as(rownames(x), "GRanges")
+    names(xx) <- as.character(xx)
+    if (is(xx, "GRanges")) {
+      rowRanges(x) <- xx
+    } else { 
+      stop("Cannot determine the coordinates of rows in `x`")
+    }
   }
+  stopifnot(is(gr, "GRanges"))
+  x <- subsetByOverlaps(x, gr)
+  if (is.null(names(gr))) names(gr) <- as.character(gr)
   ol <- findOverlaps(rowRanges(x), gr)
-  rn <- rownames(x)[queryHits(ol)]
-  grn <- names(gr)[subjectHits(ol)]
-  
-  stop("Still not quite done, need to test other functions though")
-
+  mult <- fac2sparse(names(gr)[subjectHits(ol)]) 
   message("Summarizing assay ", asy, " over ", length(gr), " features...")
-  summarized <- tapply(assay(x, asy)[rn,], grn, match.fun(how))
+  summarized <- (mult %*% assay(x, asy)[queryHits(ol), ])[names(gr), ]
+  stopifnot(identical(rownames(summarized), names(gr)))
   message("Done.")
-  res <- x
-  assays(res) <- list()
-  rowRanges(res) <- as(rownames(summarized, "GRanges"))
-  assays(res, asy) <- summarized
+  res <- x[seq_along(gr), ]
+  rowRanges(res) <- as(rownames(summarized), "GRanges")
+  rownames(res) <- as(rowRanges(res), "character")
+  assays(res) <- list(summarized)
   assayNames(res) <- asy
+
+  if (lognorm) { 
+    message("Log-normalizing summarized ", asy, " counts...")
+    res <- logNormCounts(res, assay.type=asy)
+    message("Done.")
+  }
+
   return(res)
 
 }

@@ -4,7 +4,7 @@
 \alias{summarizeOver}
 \title{given an SCE and a set of features, summarize counts over those features}
 \usage{
-summarizeOver(x, gr, asy = NULL)
+summarizeOver(x, gr, asy = NULL, lognorm = TRUE, ...)
 }
 \arguments{
 \item{x}{a SummarizedExperiment, SingleCellExperiment, or similar}
@@ -13,7 +13,7 @@ summarizeOver(x, gr, asy = NULL)
 
 \item{asy}{which assay to summarize? (whichever one is first)}
 
-\item{BPPARAM}{BiocParallel parameters (default is MulticoreParam)}
+\item{lognorm}{log-normalize the summarized counts? (TRUE)}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{   a SummarizedExperiment holding the summarized counts
@@ -24,7 +24,6 @@ given an SCE and a set of features, summarize counts over those features
 }
 \details{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{  the result is an SE because you'll want to make it an altExp.
-           you'll probably also want to run logNormCounts on the result.
 }\if{html}{\out{</div>}}
 }
 \examples{
@@ -32,7 +31,9 @@ given an SCE and a set of features, summarize counts over those features
 \dontrun{
   library(rtracklayer) 
   K27feats <- import("NBMK27_50kbp_LSIfeats.hg38.bed")
-  (MLLK27_50kb <- summarizeOver(MLLK27, K27feats))
+  MLLK27 <- altExp(stacked, "MLLK27.FragmentCounts")
+  rownames(MLLK27) <- as.character(granges(MLLK27))
+  (MLLK27_50kb <- summarizeOver(MLLK27, K27feats)))
   MLLK27_50kb <- logNormCounts(MLLK27_50kb)
   altExp(MLLK27, "K27_50kb_forNBM") <- MLLK27_50kb
 }
@@ -42,6 +43,6 @@ given an SCE and a set of features, summarize counts over those features
 \if{html}{\out{<div class="sourceCode">}}\preformatted{  scuttle::logNormCounts
 }\if{html}{\out{</div>}}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{  SSBtools::fac2sparse
+\if{html}{\out{<div class="sourceCode">}}\preformatted{  Matrix::fac2sparse
 }\if{html}{\out{</div>}}
 }
