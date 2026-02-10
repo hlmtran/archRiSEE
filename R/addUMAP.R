@@ -7,7 +7,7 @@
 #' @param minDist       passed to uwot::umap(min_dist); controls packing (0.4)
 #' @param metric        distance metric for uwot::umap to use ("cosine") 
 #' @param model         precomputed UMAP model to use for projection (NULL)
-#' @param ...           additional arguments to pass to uwot::umap[_transform]
+#' @param ...           more arguments to pass to uwot::umap()/_transform()
 #'
 #' @return              SingleCellExperiment with reducedDim(x, "NMF")
 #'

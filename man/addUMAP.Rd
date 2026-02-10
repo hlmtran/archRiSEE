@@ -30,7 +30,7 @@ addUMAP(
 
 \item{model}{precomputed UMAP model to use for projection (NULL)}
 
-\item{...}{additional arguments to pass to uwot::umap\link{_transform}}
+\item{...}{more arguments to pass to uwot::umap()/_transform()}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{         SingleCellExperiment with reducedDim(x, "NMF")
