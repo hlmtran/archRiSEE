@@ -6,7 +6,8 @@
 #' @param nNeighbors    integer nearest neighbors to use for UMAP (40)
 #' @param minDist       passed to uwot::umap(min_dist); controls packing (0.4)
 #' @param metric        distance metric for uwot::umap to use ("cosine") 
-#' @param ...           additional arguments to pass to uwot::umap()
+#' @param model         precomputed UMAP model to use for projection (NULL)
+#' @param ...           additional arguments to pass to uwot::umap[_transform]
 #'
 #' @return              SingleCellExperiment with reducedDim(x, "NMF")
 #'
@@ -21,9 +22,10 @@
 #'
 #' @export
 #'
-addUMAP <- function(x, reducedDims=NULL, name="UMAP", nNeighbors=40, minDist=0.4, metric="cosine", scale="range", ...) { 
+addUMAP <- function(x, reducedDims=NULL, name="UMAP", nNeighbors=40, minDist=0.4, metric="cosine", model=NULL, ...) { 
   
   if (is(x, 'ArchRProject')) return(ArchR::addUMAP(x, what, ...))
+
   if (is.null(reducedDims)) {
     if ("NMF" %in% reducedDimNames(x)) {
       reducedDims <- "NMF"
@@ -34,9 +36,17 @@ addUMAP <- function(x, reducedDims=NULL, name="UMAP", nNeighbors=40, minDist=0.4
     }
   }
 
-  message("Computing UMAP model using ", reducedDims, " as input...")
-  res <- uwot::umap(reducedDim(x, reducedDims), n_neighbors=nNeighbors, 
-                    metric=metric, min_dist=minDist, ret_model=TRUE, ...)
+  if (!is.null(model)) {
+    message("Using pre-computed model for UMAP projection...")
+    res <- model
+    message("Computing umap_transform() with ", reducedDims, " as input...")
+    res$embedding <- uwot::umap_transform(reducedDim(x, reducedDims), 
+                                          model=model, ...)
+  } else {
+    message("Computing UMAP model using ", reducedDims, " as input...")
+    res <- uwot::umap(reducedDim(x, reducedDims), n_neighbors=nNeighbors, 
+                      metric=metric, min_dist=minDist, ret_model=TRUE, ...)
+  }
   message("Saving model to metadata(x)$UMAP...")
   metadata(x)$UMAP <- res 
   message("Adding embeddings to reducedDim(x, '", name, "')...")

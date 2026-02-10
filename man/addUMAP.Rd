@@ -11,7 +11,7 @@ addUMAP(
   nNeighbors = 40,
   minDist = 0.4,
   metric = "cosine",
-  scale = "range",
+  model = NULL,
   ...
 )
 }
@@ -28,7 +28,9 @@ addUMAP(
 
 \item{metric}{distance metric for uwot::umap to use ("cosine")}
 
-\item{...}{additional arguments to pass to uwot::umap()}
+\item{model}{precomputed UMAP model to use for projection (NULL)}
+
+\item{...}{additional arguments to pass to uwot::umap\link{_transform}}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{         SingleCellExperiment with reducedDim(x, "NMF")
