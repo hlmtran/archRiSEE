@@ -20,13 +20,22 @@
 #'
 logTfIdf <- function(mat, prune=10, scaleTo=10000, idf=NULL) { 
 
-  if (is(mat, "SummarizedExperiment")) return(logTfIdf(assay(mat)))
-  if (is(idf, "sparseMatrix")) idf <- attr(idf, 'idf') 
+  if (is(mat, "SummarizedExperiment")) {
+    return(logTfIdf(assay(mat), prune=prune, scaleTo=scaleTo, idf=idf))
+  }
+  if(is(idf, "sparseMatrix")) idf <- attr(idf, 'idf') 
   if (!is(mat, "sparseMatrix")) stop("logTfIdf only works on sparse matrices") 
   message("Computing TF (term frequency) for ", nrow(mat), 
           " features across ", ncol(mat), " cells...")
   mat <- sweepSparse(mat, colSums(mat)) * scaleTo 
-  if (is.null(idf)) {
+
+  if (!is.null(idf)) {
+    message("Using precomputed IDF (inverse document frequency) table...")
+    idfnames <- attr(idf, 'names')
+    if (!all(idfnames == rownames(mat))) {
+      stop("rownames(mat) != attr(idf, 'names'). Subset your matrix first.")
+    }
+  } else { 
     rowSm <- rowSums(mat > 0)
     toPrune <- rowSm < prune
     if (sum(toPrune) > 0) {
@@ -43,12 +52,6 @@ logTfIdf <- function(mat, prune=10, scaleTo=10000, idf=NULL) {
     message("Computing IDF (inverse document frequency) table...")
     idf <- as((ncol(mat) + 1)/(rowSums(mat > 0) + 1), "sparseVector")
     attr(idf, 'names') <- rownames(mat)
-  } else { 
-    message("Using precomputed IDF (inverse document frequency) table...")
-    idfnames <- attr(idf, 'names')
-    if (!all(idfnames == rownames(mat))) {
-      stop("rownames(mat) != attr(idf, 'names'). Subset your matrix first.")
-    }
   }
   logtfidf <- tfidf <- (as(Diagonal(x=as.vector(idf)), "sparseMatrix") %*% mat)
   message("Computing log1p(TF-IDF)...", appendLF=FALSE)

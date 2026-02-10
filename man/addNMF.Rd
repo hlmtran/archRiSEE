@@ -4,7 +4,7 @@
 \alias{addNMF}
 \title{add an NMF decomposition to the reducedDims and rowRanges of an SCE}
 \usage{
-addNMF(x, k = 30, colDat = TRUE, rowDat = TRUE, ...)
+addNMF(x, k = 30, colDat = TRUE, rowDat = TRUE, nmf_fit = NULL, ...)
 }
 \arguments{
 \item{x}{a SingleCellExperiment, usually from archRtoSCE}
@@ -14,6 +14,8 @@ addNMF(x, k = 30, colDat = TRUE, rowDat = TRUE, ...)
 \item{colDat}{add NMF scores to colData(x)? (TRUE)}
 
 \item{rowDat}{add NMF weights to mcols(rowRanges(x))? (TRUE)}
+
+\item{nmf_fit}{an existing nmf fit to project the data (NULL)}
 
 \item{...}{additional arguments to pass to RcppML::nmf()}
 }

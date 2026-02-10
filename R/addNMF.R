@@ -6,6 +6,7 @@
 #' @param k             rank for the NMF decomposition on TFIDF (30) 
 #' @param colDat        add NMF scores to colData(x)? (TRUE)
 #' @param rowDat        add NMF weights to mcols(rowRanges(x))? (TRUE)
+#' @param nmf_fit       an existing nmf fit to project the data (NULL) 
 #' @param ...           additional arguments to pass to RcppML::nmf()
 #'
 #' @return              SingleCellExperiment with reducedDim(x, "NMF")
@@ -23,14 +24,20 @@
 #'
 #' @export
 #'
-addNMF <- function(x, k=30, colDat=TRUE, rowDat=TRUE, ...) { 
+addNMF <- function(x, k=30, colDat=TRUE, rowDat=TRUE, nmf_fit=NULL, ...) { 
 
   orig <- options()[["RcppML.verbose"]]
   if (!"TFIDF" %in% assayNames(x)) x <- addTfIdf(x)
-  message("Fitting rank-", k, " NMF model on assay(x, 'TFIDF')...")
-  options("RcppML.verbose" = TRUE)
-  metadata(x)$NMF <- RcppML::nmf(assay(x, 'TFIDF'), k=k, ...)
+
+  if (is.null(nmf_fit)) {
+    message("Fitting rank-", k, " NMF model on assay(x, 'TFIDF')...")
+    options("RcppML.verbose" = TRUE)
+    nmf_fit <- RcppML::nmf(assay(x, 'TFIDF'), k=k, ...)
+  } else { 
+    nmf_fit@h <- RcppML::predict(nmf_fit, data=assay(x, 'TFIDF'), ...)
+  }
   message("Saving model to metadata(x)$NMF...")
+  metadata(x)$NMF <- nmf_fit
   message("Copying NMF hat matrix to reducedDim(x, 'NMF')...")
   reducedDim(x, "NMF") <- t(metadata(x)$NMF@h)
   NMFdims <- ncol(reducedDim(x, "NMF"))
