@@ -12,7 +12,7 @@ archRtoSCE(
   colDat = FALSE,
   LSIdim = "IterativeLSI",
   tileSize = NULL,
-  keepbinary = TRUE,
+  keepbinary = FALSE,
   ...
 )
 }

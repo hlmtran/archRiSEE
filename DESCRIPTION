@@ -9,8 +9,8 @@ Description: ArchR is a glorious package for single-cell chromatin analysis, but
              becomes quite intuitive. archRiSEE bolts together the components 
              along with some NMF-related niceties for rapid iteration of 
              collaborative explorations, as when spitballing figures or for QC.
-Version: 0.5.0
-Date: 2026-02-06
+Version: 0.6.1
+Date: 2026-02-10
 Authors@R: person("Tim", "Triche, Jr.", role=c("aut", "cre"), email="trichelab@gmail.com")
 Author: Tim Triche, Jr. [aut, cre]
 Maintainer: Tim Triche, Jr. <trichelab@gmail.com>
@@ -31,10 +31,12 @@ Imports:
     uwot,
     igvR
 Suggests:
-    LEA,
     covr,
     ArchR,
     mirai,
+    scGBM,
+    LDAvis,
+    text2vec,
     promises,
     testthat,
     fastTopics,

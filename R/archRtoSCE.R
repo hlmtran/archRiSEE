@@ -28,7 +28,7 @@
 #'
 #' @export
 #'
-archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FALSE, colDat=FALSE, LSIdim="IterativeLSI", tileSize=NULL, keepbinary=TRUE, ...) {
+archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FALSE, colDat=FALSE, LSIdim="IterativeLSI", tileSize=NULL, keepbinary=FALSE, ...){
 
   if (!require(ArchR)) stop("This function won't work without an ArchR install")
   how <- match.arg(how) 
@@ -54,10 +54,6 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
 
   } else if (how == "LSI") {
     
-    if (tile == 500) {
-      warning("IterativeLSI run with tile size of ", tile, ", be sure it's OK!")
-    }
-
     # grab LSI-defined features
     message("Adding 'LSI' matrix to project (usually fast)...")
     proj <- addFeatureMatrix(proj, features=LSI$LSIFeatures, 
@@ -122,12 +118,9 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   rowData(SCE)$assay <- "FragmentCounts" # for binding to any other altExps
   message("You may want to update mcols(SCE)$assay to be more specific.")
   message("(For example, 'DEM' or 'H3K27me3' or 'H3K4me3' or 'ATAC'...)")
-  if (max(assay(SCE)) > 1) { 
-    message("Log-normalizing fragment counts...") 
-    SCE <- logNormCounts(SCE, assay.type="counts")
-  } else {
-    message("Binarized data, log-normalization makes no sense...")
-  }
+  message("Adding log(TF-IDF) matrix as 'TFIDF'...")
+  assay(SCE, "TFIDF") <- logTfIdf(SCE)
+  metadata(SCE)$idf <- attr(assay(SCE, "TFIDF"), "idf")
   colData(SCE) <- getCellColData(proj)
   
   message("Copying UMAP to reducedDim(SCE, 'UMAP')...")
@@ -135,8 +128,13 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
   names(reducedDim(SCE, "UMAP")) <- c("UMAP1", "UMAP2")
   message("Copying UMAP parameters to metadata(SCE)$UMAP...")
   metadata(SCE)$UMAP <- getEmbedding(proj, "UMAP", returnDF=FALSE)$params
-  message("Copying LSI scores to reducedDim(SCE, 'LSI')...")
-  reducedDim(SCE, "LSI") <- getReducedDims(proj)[colnames(SCE), ]
+
+  # turns out this matters; propagate
+  message("Copying LSI scores to reducedDim(SCE,'LSI') and dumping outliers...")
+  LSI <- getReducedDims(proj, "IterativeLSI")
+  keep <- intersect(colnames(SCE), rownames(LSI))
+  SCE <- SCE[, keep] # this was tricky to find!
+  reducedDim(SCE, "LSI") <- LSI[keep, ]
 
   if (colDat) { 
     message("Copying LSI dimensions to colData(SCE) for iSEE visualization...")
@@ -151,21 +149,21 @@ archRtoSCE <- function(proj, how=c("tiles","feats","LSI"), feats=NULL, addNMF=FA
     if (mat %in% getAvailableMatrices(proj)) {
       message("Attempting to add ", mat, " to altExp(SCE, '", mat, "')...")
       if (mat == "GeneScoreMatrix") { 
-        altExp(SCE, mat) <- archRgeneScoreMatrix(proj, genome=g)
+        altExp(SCE, mat) <- archRgeneScoreMatrix(proj, genome=g)[, keep]
       } else if (mat == "PeakMatrix") { 
-        altExp(SCE, mat) <- archRpeakMatrix(proj, genome=g)
+        altExp(SCE, mat) <- archRpeakMatrix(proj, genome=g)[, keep]
       } else { 
-        altExp(SCE, mat) <- getMatrixFromProject(proj, mat)
+        altExp(SCE, mat) <- getMatrixFromProject(proj, mat)[, keep]
       }
     }
   }
 
   if (addNMF) {
     if (max(assay(SCE)) > 1) {
-      warning("Running addNMF() on logcounts; consider addTopicModel() though") 
+      warning("Running addNMF() on TFIDF...")
       SCE <- addNMF(SCE, k=k, colDat=colDat, rowDat=TRUE)
     } else { 
-      warning("Your fragment counts are binarized; consider addTopicModel()") 
+      warning("Your fragment counts are binarized; at least use logTfIdf()!")
     }
   }
 

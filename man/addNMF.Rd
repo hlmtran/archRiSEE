@@ -9,7 +9,7 @@ addNMF(x, k = 30, colDat = TRUE, rowDat = TRUE, ...)
 \arguments{
 \item{x}{a SingleCellExperiment, usually from archRtoSCE}
 
-\item{k}{rank for the NMF decomposition on logCounts (30)}
+\item{k}{rank for the NMF decomposition on TFIDF (30)}
 
 \item{colDat}{add NMF scores to colData(x)? (TRUE)}
 
@@ -25,7 +25,8 @@ addNMF(x, k = 30, colDat = TRUE, rowDat = TRUE, ...)
 By default, the weights for each factor are copied to mcols(rowRanges(x)).
 }
 \details{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{        the mcols(rowRanges(x)) weights are for igvR plotting 
+\if{html}{\out{<div class="sourceCode">}}\preformatted{        the mcols(rowRanges(x)) weights are for igvR plotting
+                 it would be a good idea to flag a "sensible" rank here
 }\if{html}{\out{</div>}}
 }
 \seealso{

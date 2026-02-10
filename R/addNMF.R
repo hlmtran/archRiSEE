@@ -3,14 +3,15 @@
 #' By default, the weights for each factor are copied to mcols(rowRanges(x)).
 #'
 #' @param x             a SingleCellExperiment, usually from archRtoSCE
-#' @param k             rank for the NMF decomposition on logCounts (30) 
+#' @param k             rank for the NMF decomposition on TFIDF (30) 
 #' @param colDat        add NMF scores to colData(x)? (TRUE)
 #' @param rowDat        add NMF weights to mcols(rowRanges(x))? (TRUE)
 #' @param ...           additional arguments to pass to RcppML::nmf()
 #'
 #' @return              SingleCellExperiment with reducedDim(x, "NMF")
 #'
-#' @details             the mcols(rowRanges(x)) weights are for igvR plotting 
+#' @details             the mcols(rowRanges(x)) weights are for igvR plotting
+#'                      it would be a good idea to flag a "sensible" rank here
 #'
 #' @seealso             archRtoSCE
 #' @seealso             iSEEarchR
@@ -24,12 +25,12 @@
 #'
 addNMF <- function(x, k=30, colDat=TRUE, rowDat=TRUE, ...) { 
 
-  if (! "logcounts" %in% assayNames(x)) x <- logNormCounts(x) 
-  
   orig <- options()[["RcppML.verbose"]]
-  message("Fitting rank-", k, " NMF model on logCounts(x)...")
+  if (!"TFIDF" %in% assayNames(x)) x <- addTfIdf(x)
+  message("Fitting rank-", k, " NMF model on assay(x, 'TFIDF')...")
   options("RcppML.verbose" = TRUE)
-  metadata(x)$NMF <- RcppML::nmf(logcounts(x), k=k, ...)
+  metadata(x)$NMF <- RcppML::nmf(assay(x, 'TFIDF'), k=k, ...)
+  message("Saving model to metadata(x)$NMF...")
   message("Copying NMF hat matrix to reducedDim(x, 'NMF')...")
   reducedDim(x, "NMF") <- t(metadata(x)$NMF@h)
   NMFdims <- ncol(reducedDim(x, "NMF"))
