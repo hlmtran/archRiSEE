@@ -4,16 +4,16 @@
 \alias{logTfIdf}
 \title{ArchR-style log1p(TF-IDF) transformation but without mandatory binarization}
 \usage{
-logTfIdf(mat, prune = 10, scaleTo = 10000, idf = NULL)
+logTfIdf(mat, prune = 10, idf = NULL, binarize = TRUE)
 }
 \arguments{
 \item{mat}{a (sparse) matrix of counts (cells as columns) or an SE}
 
 \item{prune}{prune (cells >= prune)? (10, by default; 0 to disable)}
 
-\item{scaleTo}{scaling factor for library sizes (10000, i.e., cp10k)}
-
 \item{idf}{a pre-trained idf or logTfIdf result (NULL; compute idf)}
+
+\item{binarize}{binarize the values for TF-IDF? (FALSE)}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{     a log1p(TF-IDF) version of the (counts) matrix (see Details)

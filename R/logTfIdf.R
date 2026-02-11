@@ -2,8 +2,8 @@
 #' 
 #' @param mat       a (sparse) matrix of counts (cells as columns) or an SE
 #' @param prune     prune (cells >= prune)? (10, by default; 0 to disable)
-#' @param scaleTo   scaling factor for library sizes (10000, i.e., cp10k)
 #' @param idf       a pre-trained idf or logTfIdf result (NULL; compute idf)
+#' @param binarize  binarize the values for TF-IDF? (FALSE)
 #' 
 #' @return          a log1p(TF-IDF) version of the (counts) matrix (see Details)
 #'
@@ -18,16 +18,22 @@
 #'
 #' @export
 #'
-logTfIdf <- function(mat, prune=10, scaleTo=10000, idf=NULL) { 
+logTfIdf <- function(mat, prune=10, idf=NULL, binarize=TRUE) { 
 
   if (is(mat, "SummarizedExperiment")) {
-    return(logTfIdf(assay(mat), prune=prune, scaleTo=scaleTo, idf=idf))
+    return(logTfIdf(assay(mat), prune=prune, idf=idf, binarize=binarize))
   }
-  if(is(idf, "sparseMatrix")) idf <- attr(idf, 'idf') 
+  if (is(idf, "sparseMatrix")) idf <- attr(idf, 'idf') 
   if (!is(mat, "sparseMatrix")) stop("logTfIdf only works on sparse matrices") 
-  message("Computing TF (term frequency) for ", nrow(mat), 
-          " features across ", ncol(mat), " cells...")
-  mat <- sweepSparse(mat, colSums(mat)) * scaleTo 
+  if (binarize) mat@x <- ifelse(mat@x > 0, 1, 0)
+  origrows <- rownames(mat)
+
+  # directly borrowed from ArchR
+  colSm <- Matrix::colSums(mat)
+  rowSm <- Matrix::rowSums(mat)
+  message("Term frequency normalization... ", appendLF=FALSE)
+  mat@x <- (mat@x / rep.int(colSm, Matrix::diff(mat@p)))
+  message("done.")
 
   if (!is.null(idf)) {
     message("Using precomputed IDF (inverse document frequency) table...")
@@ -36,29 +42,30 @@ logTfIdf <- function(mat, prune=10, scaleTo=10000, idf=NULL) {
       stop("rownames(mat) != attr(idf, 'names'). Subset your matrix first.")
     }
   } else { 
-    rowSm <- rowSums(mat > 0)
-    toPrune <- rowSm < prune
+    rowSm2 <- rowSums(mat > 0)
+    toPrune <- rowSm2 < prune
     if (sum(toPrune) > 0) {
-      message("Minimum observed feature frequency: ", min(rowSm[rowSm>0]))
+      message("Minimum observed feature frequency: ", min(rowSm2[rowSm2 > 0]))
       message("Minimum allowable feature frequency: ", prune)
       message("Zeroing out ",sum(toPrune)," of ",length(toPrune)," features.")
-      keep <- as(Diagonal(x=!toPrune), "sparseMatrix")
+      keep <- as(Matrix::Diagonal(x=!toPrune), "sparseMatrix")
       rownames(keep) <- rownames(mat) 
       mat <- keep %*% mat
-      rowSm <- rowSums(mat > 0)
-      message("Minimum feature frequency is ", min(rowSm[rowSm > 0]),
+      rowSm2 <- rowSums(mat > 0)
+      message("Minimum feature frequency is ", min(rowSm2[rowSm2 > 0]),
               " (", sum(keep), "/", length(toPrune), " features retained).")
     }
-    message("Computing IDF (inverse document frequency) table...")
-    idf <- as((ncol(mat) + 1)/(rowSums(mat > 0) + 1), "sparseVector")
+    message("Computing IDF (inverse document frequency) table... ", appendLF=0)
+    idf <- as(ncol(mat)/rowSm2, "sparseVector")
     attr(idf, 'names') <- rownames(mat)
+    message("done.")
   }
-  logtfidf <- tfidf <- (as(Diagonal(x=as.vector(idf)), "sparseMatrix") %*% mat)
-  message("Computing log1p(TF-IDF)...", appendLF=FALSE)
-  logtfidf@x <- log1p(tfidf@x)
-  attr(logtfidf, 'idf') <- idf
-  rownames(logtfidf) <- rownames(mat)
-  message("Done.")
-  return(logtfidf)
+  mat <- as(Matrix::Diagonal(x=as.vector(idf)), "sparseMatrix") %*% mat
+  message("Computing log1p(TF-IDF)... ", appendLF=FALSE)
+  mat@x <- log(mat@x * 10001)
+  rownames(mat) <- origrows
+  attr(mat, 'idf') <- idf
+  message("done.")
+  return(mat)
 
 }
