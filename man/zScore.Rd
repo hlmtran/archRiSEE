@@ -9,7 +9,7 @@
 \usage{
 colUnitScale(x, ...)
 
-zScore(x, MARGIN = c(1, 2))
+zScore(x, MARGIN = 1)
 
 rowZscores(x, ...)
 

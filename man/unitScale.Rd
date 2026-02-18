@@ -5,7 +5,7 @@
 \alias{rowUnitScale}
 \title{scale factors (e.g. NMF factors) to unit distance}
 \usage{
-unitScale(x, MARGIN = c(1, 2))
+unitScale(x, MARGIN = 1)
 
 rowUnitScale(x, ...)
 }

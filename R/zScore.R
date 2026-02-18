@@ -7,9 +7,9 @@
 #'
 #' @export
 #'
-zScore <- function(x, MARGIN=c(1, 2)) {
+zScore <- function(x, MARGIN=1) {
 
-  MARGIN <- match.arg(MARGIN)
+  stopifnot(MARGIN %in% 1:2)
   STAT1 <- ifelse(MARGIN == 1, rowMeans(x, na.rm=TRUE), colMeans(x, na.rm=TRUE))
   STAT2 <- ifelse(MARGIN == 1, rowSds(x, na.rm=TRUE), colSds(x, na.rm=TRUE))
   FN <- ifelse(is(x, "sparseMatrix"), archRiSEE::sweepSparse, base::sweep)

@@ -7,9 +7,9 @@
 #'
 #' @export
 #'
-unitScale <- function(x, MARGIN=c(1, 2)) {
+unitScale <- function(x, MARGIN=1) {
 
-  MARGIN <- match.arg(MARGIN)
+  stopifnot(MARGIN %in% 1:2)
   STAT1 <- ifelse(MARGIN == 1, rowMins(x, na.rm=TRUE), colMins(x, na.rm=TRUE))
   STAT2 <- ifelse(MARGIN == 1, rowMaxs(x, na.rm=TRUE), colMaxs(x, na.rm=TRUE))
   FN <- ifelse(is(x, "sparseMatrix"), archRiSEE::sweepSparse, base::sweep)
