@@ -2,21 +2,23 @@
 % Please edit documentation in R/sweepSparse.R
 \name{sweepSparse}
 \alias{sweepSparse}
-\title{fast column sweep for sparse matrices}
+\title{fast row/column sweep for sparse matrices}
 \usage{
-sweepSparse(mat, stats, fun = "/")
+sweepSparse(x, MARGIN, STATS, FUN = "/")
 }
 \arguments{
-\item{mat}{a (sparse) matrix}
+\item{x}{a (sparse) matrix}
 
-\item{stats}{what to sweep out}
+\item{MARGIN}{margin to be swept}
 
-\item{fun}{how to sweep it out ('/')}
+\item{STATS}{what to sweep out}
+
+\item{FUN}{how to sweep it out ('/')}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{     mat, with colSums swept out (divided through, by default)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{     x, with stats swept out (divided through by default)
 }\if{html}{\out{</div>}}
 }
 \description{
-fast column sweep for sparse matrices
+fast row/column sweep for sparse matrices
 }

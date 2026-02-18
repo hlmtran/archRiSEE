@@ -1,20 +1,23 @@
-#' fast column sweep for sparse matrices
+#' fast row/column sweep for sparse matrices
 #' 
-#' @param mat       a (sparse) matrix
-#' @param stats     what to sweep out
-#' @param fun       how to sweep it out ('/')
+#' @param x         a (sparse) matrix
+#' @param MARGIN    margin to be swept
+#' @param STATS     what to sweep out
+#' @param FUN       how to sweep it out ('/')
 #' 
-#' @return          mat, with colSums swept out (divided through, by default)
+#' @return          x, with stats swept out (divided through by default)
 #'
+#' @import          MatrixGenerics
 #' @import          Matrix
 #'
 #' @export
 #'
-sweepSparse <- function(mat, stats, fun="/") {
+sweepSparse <- function(x, MARGIN, STATS, FUN="/") {
 
-  mat <- t(mat) 
-  f <- match.fun(fun)
-  mat@x <- f(mat@x, stats[mat@i + 1])
-  return(t(mat))
+  f <- match.fun(FUN)
+  if (MARGIN == 2) x <- t(x) 
+  x@x <- f(x@x, STATS[x@i + 1])
+  if (MARGIN == 2) x <- t(x) 
+  return(x)
 
 }

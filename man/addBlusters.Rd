@@ -24,7 +24,9 @@ flexibly add clusterings with a variety of methods and benchmarks
 this function delegates to clusterRows(), which as the name
 suggests, works on a matrix where the observations are rows and
 the measurements are columns (i.e., a reducedDim). If no BLUSPARAM
-is specified, the function defaults to TwoStepParam().
+is specified, the function defaults to
+NNGraphParam(cluster.fun='louvain',
+cluster.args=list(resolution=0.8))
 }
 \seealso{
 bluster::clusterRows
@@ -38,8 +40,6 @@ bluster::bootstrapStability
 bluster::compareClusterings
 
 bluster::linkClusters
-
-bluster::TwoStepParam-class
 
 bluster::NNGraphParam-class
 

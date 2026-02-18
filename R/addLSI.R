@@ -43,8 +43,14 @@ addLSI <- function(x, useMatrix=c("TFIDF","counts"), name="LSI", scaleDims=TRUE,
   diag(svdDiag) <- svd$d
   matSVD <- t(svdDiag %*% t(svd$v))
   rownames(matSVD) <- colnames(mat)
+  if (scaleDims) {
+    # check and see if this is doing it right!
+    message("Scaling matSVD...")
+    matSVD <- rowZscores(matSVD)
+  }
   message("Checking for depth-correlated columns...")
   toKeep <- which(cor(matSVD, colData(x)[[depth]])[, 1] < corCutOff)
+  message("Kept ", (length(toKeep)/ncol(matSVD)*100), "% of columns.")
   matSVD <- matSVD[, toKeep][, seq_len(nDimensions)]
   colnames(matSVD) <- paste0("LSI",seq_len(ncol(matSVD)))
   reducedDim(x, name) <- matSVD

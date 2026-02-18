@@ -9,7 +9,9 @@
 #' @details this function delegates to clusterRows(), which as the name
 #'          suggests, works on a matrix where the observations are rows and 
 #'          the measurements are columns (i.e., a reducedDim). If no BLUSPARAM
-#'          is specified, the function defaults to TwoStepParam().
+#'          is specified, the function defaults to 
+#'          NNGraphParam(cluster.fun='louvain', 
+#'                       cluster.args=list(resolution=0.8))
 #'
 #' @seealso bluster::clusterRows
 #' @seealso bluster::clusterSweep
@@ -17,7 +19,6 @@
 #' @seealso bluster::bootstrapStability
 #' @seealso bluster::compareClusterings
 #' @seealso bluster::linkClusters
-#' @seealso bluster::TwoStepParam-class
 #' @seealso bluster::NNGraphParam-class
 #' @seealso bluster::DbscanParam-class
 #' 
@@ -27,8 +28,12 @@
 #'
 addBlusters <- function(x, BLUSPARAM=NULL, rdName=NULL) { 
 
-  if (is.null(BLUSPARAM)) BLUSPARAM <- TwoStepParam()
   if (is.null(rdName)) rdName <- reducedDimNames(x)[1]
+
+  if (is.null(BLUSPARAM)) {
+    BLUSPARAM <- NNGraphParam(cluster.fun='louvain',
+                              cluster.args=list(resolution=0.8))
+  }
 
   message("Running bluster::clusterRows on ", rdName, 
           " with ", class(BLUSPARAM)[[1]])
