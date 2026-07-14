@@ -4,7 +4,7 @@
 \alias{archRiterLSI}
 \title{retrieve relevant IterativeLSI bits from an ArchR project}
 \usage{
-archRiterLSI(proj, LSIdim = "IterativeLSI", keep = NULL)
+archRiterLSI(proj, LSIdim = "IterativeLSI", keep = NULL, full = FALSE)
 }
 \arguments{
 \item{proj}{the ArchRProject}
@@ -12,10 +12,15 @@ archRiterLSI(proj, LSIdim = "IterativeLSI", keep = NULL)
 \item{LSIdim}{name of the IterativeLSI reducedDims entry ("IterativeLSI")}
 
 \item{keep}{these ("matSVD","outliers","LSIFeatures","u","d","v","idf")}
+
+\item{full}{just pull the entire LSI object? (FALSE)}
 }
 \value{
 a list with embeddings, outliers to exclude, features GRanges, etc.
 }
 \description{
 retrieve relevant IterativeLSI bits from an ArchR project
+}
+\details{
+archRiterLSI(proj, full=TRUE) is useful for projection testing.
 }

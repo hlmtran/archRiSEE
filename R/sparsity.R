@@ -15,6 +15,11 @@
 #'
 #' @export
 #'
+if (!isGeneric("sparsity")) { 
+  setGeneric("sparsity", 
+             function(object) 1 - (length(object@x) / prod(dim(object))))
+}
+
 setMethod("sparsity", "Matrix", 
           function(object) 1 - (length(object@x) / prod(dim(object))))
 setMethod("sparsity", "SummarizedExperiment", 

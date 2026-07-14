@@ -9,8 +9,8 @@ Description: ArchR is a glorious package for single-cell chromatin analysis, but
              becomes quite intuitive. archRiSEE bolts together the components 
              along with some NMF-related niceties for rapid iteration of 
              collaborative explorations, as when spitballing figures or for QC.
-Version: 0.7.3
-Date: 2026-02-18
+Version: 0.8.8
+Date: 2026-07-14
 Authors@R: person("Tim", "Triche, Jr.", role=c("aut", "cre"), email="trichelab@gmail.com")
 Author: Tim Triche, Jr. [aut, cre]
 Maintainer: Tim Triche, Jr. <trichelab@gmail.com>
@@ -42,6 +42,6 @@ Suggests:
     testthat,
     fastTopics,
     chromophobe
-RoxygenNote: 7.3.3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0

@@ -13,7 +13,7 @@ logTfIdf(mat, prune = 10, idf = NULL, binarize = TRUE)
 
 \item{idf}{a pre-trained idf or logTfIdf result (NULL; compute idf)}
 
-\item{binarize}{binarize the values for TF-IDF? (FALSE)}
+\item{binarize}{binarize the values for TF-IDF? (TRUE)}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{     a log1p(TF-IDF) version of the (counts) matrix (see Details)

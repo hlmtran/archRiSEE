@@ -3,7 +3,7 @@
 #' @param mat       a (sparse) matrix of counts (cells as columns) or an SE
 #' @param prune     prune (cells >= prune)? (10, by default; 0 to disable)
 #' @param idf       a pre-trained idf or logTfIdf result (NULL; compute idf)
-#' @param binarize  binarize the values for TF-IDF? (FALSE)
+#' @param binarize  binarize the values for TF-IDF? (TRUE)
 #' 
 #' @return          a log1p(TF-IDF) version of the (counts) matrix (see Details)
 #'
@@ -25,7 +25,7 @@ logTfIdf <- function(mat, prune=10, idf=NULL, binarize=TRUE) {
   }
   if (is(idf, "sparseMatrix")) idf <- attr(idf, 'idf') 
   if (!is(mat, "sparseMatrix")) stop("logTfIdf only works on sparse matrices") 
-  if (binarize) mat@x <- ifelse(mat@x > 0, 1, 0)
+  if (binarize) mat <- binarizeMat(mat)
   origrows <- rownames(mat)
 
   # directly borrowed from ArchR
@@ -42,7 +42,7 @@ logTfIdf <- function(mat, prune=10, idf=NULL, binarize=TRUE) {
       stop("rownames(mat) != attr(idf, 'names'). Subset your matrix first.")
     }
   } else { 
-    rowSm2 <- rowSums(mat > 0)
+    rowSm2 <- rowSums(mat > 0)  # doesn't binarization already do this?!
     toPrune <- rowSm2 < prune
     if (sum(toPrune) > 0) {
       message("Minimum observed feature frequency: ", min(rowSm2[rowSm2 > 0]))
