@@ -2,9 +2,6 @@ library(archRiSEE)
 
 # test project
 library(ArchR)
-proj <- getTestProject()
-proj <- addIterativeLSI(proj, dimsToUse=1:5, varFeatures=1000, force=TRUE)
-#
 # Checking Inputs...
 # Detected less than 500 Cells.
 # `filterBias` disabled.
@@ -26,8 +23,18 @@ rowRanges(SEsmall) <- as(rowData(SEsmall), "GRanges")
 rownames(SEsmall) <- as.character(rowRanges(SEsmall))
 head(rownames(SEsmall))
 
+
+
+LSIFeats <- archRiterLSI(proj)$LSIFeatures
+# if (is(LSIFeats, "GRanges")) {
+#   message("Flagging features which were used for iterative LSI...")
+  ol <- findOverlaps(rowRanges(SEsmall), LSIFeats)
+  rowRanges(SEsmall)$usedForLSI <- FALSE
+  rowRanges(SEsmall)$usedForLSI[queryHits(ol)] <- TRUE
+# }
+
 # test projection and LSI mapping to archRiSEE
-res <- try(addLSI(SEsmall))
+res <- try(addLSI(SEsmall,useMatrix="TileMatrix"))
 if (!inherits(res, "try-error")) {
   subsample <- sample(colnames(SEsmall), 100)
   toProject <- assay(SEsmall)[, subsample]

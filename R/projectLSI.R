@@ -14,6 +14,11 @@ projectLSI <- function(mat, LSI) {
   mat <- mat[LSI$idx,]                                          # check idx?
   mat@x[mat@x > 0] <- 1                                         # binarize
   colSm <- Matrix::colSums(mat)                                 # check for 0
+  if(any(colSm == 0)){                                          # exclude zeros 
+    exclude <- which(colSm==0)
+    mat <- mat[,-exclude]
+    colSm <- colSm[-exclude]
+  }
   stopifnot(all(colSm > 0))                                     # fail on zeros
   mat@x <- mat@x / rep.int(colSm, Matrix::diff(mat@p))          # TF normalize
   idf <- as(LSI$nCol / LSI$rowSm, "sparseVector")               # pull the IDF
