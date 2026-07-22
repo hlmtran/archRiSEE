@@ -15,6 +15,9 @@
 #'
 #' @export
 #'
+#' @name          sparsity
+NULL
+
 if (!isGeneric("sparsity")) { 
   setGeneric("sparsity", 
              function(object) 1 - (length(object@x) / prod(dim(object))))

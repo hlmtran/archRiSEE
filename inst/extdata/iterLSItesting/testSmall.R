@@ -13,8 +13,11 @@ proj <- addIterativeLSI(proj, dimsToUse=1:5, varFeatures=1000, force=TRUE)
 # `testBias` in `addClusters` disabled
 #
 proj <- addTileMatrix(proj) 
-SEsmall <- ArchR::getMatrixFromProject(proj, "TileMatrix")
+SEsmall <- ArchR::getMatrixFromProject(proj, "TileMatrix", binarize=TRUE)
 metadata(SEsmall)$LSI <- proj@reducedDims$IterativeLSI # just a List 
+LSIfeats <- match(metadata(SEsmall)$LSI$idx, mcols(SEsmall)$idx)
+mcols(SEsmall)$usedForLSI <- (mcols(SEsmall)$idx %in% metadata(SEsmall)$LSI$idx)
+all(mcols(SEsmall)$usedForLSI[LSIfeats])
 
 # test whether by naming the features we can robustify .projectLSI
 rownames(SEsmall) 
@@ -28,11 +31,28 @@ head(rownames(SEsmall))
 
 # test projection and LSI mapping to archRiSEE
 res <- try(addLSI(SEsmall))
+# 'TFIDF' not in names(assays(<RangedSummarizedExperiment>))
+SEsmall <- addTfIdf(SEsmall)
+
+# try again
+res <- try(addLSI(SEsmall))
+
 if (!inherits(res, "try-error")) {
   subsample <- sample(colnames(SEsmall), 100)
   toProject <- assay(SEsmall)[, subsample]
   LSI <- metadata(SEsmall)$LSI
   projectedMatSVD <- archRiSEE::projectLSI(toProject, LSI)
+  # Subsetting TF-IDF matrix...
+  # Running SVD...
+  # Warning in irlba::irlba(mat, nDimensions + 5, nDimensions + 5) :
+  #   convergence criterion below machine epsilon
+  # Warning in irlba::irlba(mat, nDimensions + 5, nDimensions + 5) :
+  #   did not converge--results might be invalid!; try increasing work or maxit
+  # Scaling matSVD...
+  # Checking for depth-correlated columns...
+  # Kept 0% of columns.
+  # Error in matSVD[, toKeep][, seq_len(nDimensions)] : 
+  #   subscript out of bounds
   testError <- projectedMatSVD - LSI$matSVD[subsample, ] 
 }
 
