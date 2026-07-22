@@ -12,7 +12,7 @@ proj <- addIterativeLSI(proj, dimsToUse=1:5, varFeatures=1000, force=TRUE)
 # `sampleCellsPre` disabled
 # `testBias` in `addClusters` disabled
 #
-proj <- addTileMatrix(proj, binarize=FALSE, force=TRUE)
+proj <- addTileMatrix(proj) 
 SEsmall <- ArchR::getMatrixFromProject(proj, "TileMatrix")
 metadata(SEsmall)$LSI <- proj@reducedDims$IterativeLSI # just a List 
 
