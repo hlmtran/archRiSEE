@@ -1,7 +1,7 @@
 #' ArchR-style log1p(TF-IDF) transformation but without mandatory binarization
 #' 
 #' @param mat       a (sparse) matrix of counts (cells as columns) or an SE
-#' @param prune     prune (cells >= prune)? (10, by default; 0 to disable)
+#' @param prune     prune (cells >= prune)? (1, by default)
 #' @param idf       a pre-trained idf or logTfIdf result (NULL; compute idf)
 #' @param binarize  binarize the values for TF-IDF? (TRUE)
 #' 
@@ -18,7 +18,7 @@
 #'
 #' @export
 #'
-logTfIdf <- function(mat, prune=10, idf=NULL, binarize=TRUE) { 
+logTfIdf <- function(mat, prune=1, idf=NULL, binarize=TRUE) { 
 
   if (is(mat, "SummarizedExperiment")) {
     return(logTfIdf(assay(mat), prune=prune, idf=idf, binarize=binarize))
@@ -43,7 +43,7 @@ logTfIdf <- function(mat, prune=10, idf=NULL, binarize=TRUE) {
     }
   } else { 
     rowSm2 <- rowSums(mat > 0)  # doesn't binarization already do this?!
-    toPrune <- rowSm2 < prune
+    toPrune <- (rowSm2 < prune)
     if (sum(toPrune) > 0) {
       message("Minimum observed feature frequency: ", min(rowSm2[rowSm2 > 0]))
       message("Minimum allowable feature frequency: ", prune)
@@ -56,7 +56,7 @@ logTfIdf <- function(mat, prune=10, idf=NULL, binarize=TRUE) {
               " (", sum(keep), "/", length(toPrune), " features retained).")
     }
     message("Computing IDF (inverse document frequency) table... ", appendLF=0)
-    idf <- as(ncol(mat)/rowSm2, "sparseVector")
+    idf <- as(((ncol(mat)+1)/(rowSm2+1)) + 1, "sparseVector")
     attr(idf, 'names') <- rownames(mat)
     message("done.")
   }

@@ -4,12 +4,12 @@
 \alias{logTfIdf}
 \title{ArchR-style log1p(TF-IDF) transformation but without mandatory binarization}
 \usage{
-logTfIdf(mat, prune = 10, idf = NULL, binarize = TRUE)
+logTfIdf(mat, prune = 1, idf = NULL, binarize = TRUE)
 }
 \arguments{
 \item{mat}{a (sparse) matrix of counts (cells as columns) or an SE}
 
-\item{prune}{prune (cells >= prune)? (10, by default; 0 to disable)}
+\item{prune}{prune (cells >= prune)? (1, by default)}
 
 \item{idf}{a pre-trained idf or logTfIdf result (NULL; compute idf)}
 
