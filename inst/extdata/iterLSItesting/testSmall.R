@@ -2,6 +2,9 @@ library(archRiSEE)
 
 # test project
 library(ArchR)
+proj <- getTestProject()
+proj <- addIterativeLSI(proj, dimsToUse=1:5, varFeatures=1000, force=TRUE)
+#
 # Checking Inputs...
 # Detected less than 500 Cells.
 # `filterBias` disabled.
