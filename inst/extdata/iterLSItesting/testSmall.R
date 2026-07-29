@@ -3,6 +3,7 @@ library(archRiSEE)
 # test project
 library(ArchR)
 proj <- getTestProject()
+proj <- addTileMatrix(proj,,tileSize=20000,binarize=TRUE,force=TRUE)
 proj <- addIterativeLSI(proj, dimsToUse=1:5, varFeatures=1000, force=TRUE)
 #
 # Checking Inputs...
@@ -12,7 +13,7 @@ proj <- addIterativeLSI(proj, dimsToUse=1:5, varFeatures=1000, force=TRUE)
 # `sampleCellsPre` disabled
 # `testBias` in `addClusters` disabled
 #
-proj <- addTileMatrix(proj) 
+# proj <- addTileMatrix(proj) 
 SEsmall <- ArchR::getMatrixFromProject(proj, "TileMatrix", binarize=TRUE)
 metadata(SEsmall)$LSI <- proj@reducedDims$IterativeLSI # just a List 
 LSIfeats <- match(metadata(SEsmall)$LSI$idx, mcols(SEsmall)$idx)
@@ -60,3 +61,7 @@ if (!inherits(res, "try-error")) {
 
 
 # test projecting on stacked data
+
+
+projected_test <- archRiSEE::projectLSI(mat_iter1_20k, LSI_iter1_20k)
+identical(projected_test,matSVD_iter1_20k)
